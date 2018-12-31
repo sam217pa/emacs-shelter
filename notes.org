@@ -1,0 +1,7 @@
+* TODO support tabulating
+When many are provided, support tabulating them as in:
+
+#+begin_example
+a - function | b - function
+c - function | d - function
+#+end_example
