@@ -1,6 +1,7 @@
 ;; -*- lexical-binding: t -*-
 
 (require 'minimenu)
+(require 'camp)
 
 (defcustom minimenu-lisp-actions
   '(("b" (:fun eval-buffer    :desc "whole buffer"))
@@ -20,27 +21,27 @@
   :group 'minimenu-lisp
   :type 'alist)
 
-(defun minimenu--at-paren-p ()
+(defun minimenu-lisp--at-paren-p ()
+  "Returns t if point is after a closing paren."
   (looking-back "\)" (1- (point))))
 
-(defmacro minimenu-lisp-defun (name doc col)
-  (declare (debug t)
-           (indent 0))
-  `(defun ,name (&optional arg)
-     ,doc
-     (interactive "p")
-     (if (minimenu--at-paren-p)
-         (minimenu--call ,col)
-       (self-insert-command arg))))
+(camp-defmacro minimenu-lisp-defun-paren
+  "Define minimenu function for lisp when point is after
+a closing paren."
+  (minimenu-lisp--at-paren-p))
 
-(minimenu-lisp-defun minimenu-lisp-nav "" minimenu-lisp-navigate)
-(minimenu-lisp-defun minimenu-lisp-eval "" minimenu-lisp-actions)
+(minimenu-lisp-defun-paren minimenu-lisp-nav
+  "Action for navigating in emacs lisp."
+  minimenu-lisp-navigate)
 
-(let ((keys '(("x" . minimenu-lisp-eval)
-              ("f" . minimenu-lisp-nav))))
-  (cl-loop
-   for x in keys
-   do (define-key emacs-lisp-mode-map (kbd (car x)) (cdr x))))
+(minimenu-lisp-defun-paren minimenu-lisp-eval
+  "Actions for evaluating in emacs lisp."
+  minimenu-lisp-actions)
 
+;;;###autoload
+(minimenu-define-minor-mode emacs-lisp
+  "Minimenu minor-mode for emacs-lisp"
+  '(("x" . minimenu-lisp-eval)
+    ("f" . minimenu-lisp-nav)))
 
 (provide 'minimenu-lisp)
