@@ -29,7 +29,7 @@ satisfied, otherwise the key just self-insert."
           ,docstring
           (interactive "p")
           (if ,',-condition
-              (minimenu--call ,collection)
+              (minimenu-call ,collection)
             (self-insert-command arg)))))
 
 (defun camp--define-keys (keymap keys)

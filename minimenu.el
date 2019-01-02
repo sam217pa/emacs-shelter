@@ -192,9 +192,11 @@ if not, sanitize them with ``minimenu--sanitize-key-desc''."
         (error "At least one element of COL have no :fun."))))
 
 ;;;###autoload
-(defun minimenu--call (col)
+(defun minimenu-call (col)
   "Display COL alist in an overlay and call the function
-associated to input key."
+associated to input key.
+
+"
   (let*
       ((col (minimenu--rectify-col col))
        ;; col-print is the printed representation of col
