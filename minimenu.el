@@ -8,6 +8,11 @@
 Is redefined each time an overlay is required by a minimenu
 function.")
 
+(defvar minimenu--old-cursor-type nil
+  "Cursor type variable to save the old cursor type.
+
+It can be restored after the overlay has been cleaned up.")
+
 (defun minimenu-ov-cleanup ()
   "Reset the minimenu overlay.
 
@@ -15,12 +20,17 @@ Set the ``minimenu-ov'' to nil and delete the corresponding
 overlay."
   (when (overlayp minimenu-ov)
     (delete-overlay minimenu-ov)
-    (setq minimenu-ov nil)))
+    (setq minimenu-ov nil)
+    (unless cursor-type
+      (setq cursor-type minimenu--old-cursor-type))))
 
 (defun minimenu--overlay (str)
   "Display STR in the ``minimenu-ov'' overlay."
   (let ((beg (if (bolp) (point) (1- (point))))
         (end (line-end-position)))
+    (when cursor-type
+      (setq minimenu--old-cursor-type cursor-type)
+      (setq cursor-type nil))
     (setq minimenu-ov (make-overlay beg end))
     (overlay-put minimenu-ov 'display str)
     (overlay-put minimenu-ov 'before-string "\n")
