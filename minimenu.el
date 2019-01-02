@@ -151,6 +151,7 @@ if not, sanitize them with ``minimenu--sanitize-key-desc''."
     (or (minimenu--sanitize-key-desc col)
         (error "At least one element of COL have no :fun."))))
 
+;;;###autoload
 (defun minimenu--call (col)
   "Display COL alist in an overlay and call the function
 associated to input key."
@@ -171,42 +172,5 @@ associated to input key."
         (message "Quit"))
        (t
         (minimenu--call-candidate-function key col-fun))))))
-
-;;; Minor mode definer
-
-(defun minimenu--define-keys (keymap keys)
-  "Short helper that define KEYS in keymap.
-
-Keys should be a proper cons list of the given form:
-'((\"a\" . function-1)
-  (\"b\" . function-2))"
-  (cl-loop
-   for x in keys
-   do (define-key keymap (kbd (car x)) (cdr x))))
-
-(defmacro minimenu-define-minor-mode (name docstring keys)
-  "Helper for defining a minimenu-assisted minor mode.
-
-NAME is the name of the mode that is to be assisted.
-
-DOCSTRING is the documentation string of the minor mode.
-
-KEYS is a cons list of key-function association that constitutes
-the minimenu minor mode."
-  (declare (debug t) (indent 1))
-  (let*
-      ((mm-name name)
-       (mm-minor-mode (intern (format "minimenu-%s-minor-mode" mm-name)))
-       (mm-keymap (intern (format "minimenu-%s-mode-map" mm-name)))
-       (mm-group (intern (format "minimenu-%s" mm-name)))
-       (mm-lighter " mm"))
-    `(progn
-       (defvar ,mm-keymap (make-sparse-keymap))
-       (minimenu--define-keys ,mm-keymap ,keys)
-       (define-minor-mode ,mm-minor-mode
-         ,docstring
-         :keymap ,mm-keymap
-         :group ,mm-group
-         :lighter ,mm-lighter))))
 
 (provide 'minimenu)

@@ -7,7 +7,7 @@
   "Define minimenu function for org mode when point is at
 heading."
   (and (looking-at org-outline-regexp)
-       (looking-back "^\**")))
+       (looking-back "^\**" (point-at-bol))))
 
 (minimenu-org-defun-heading mm-org-heading
   "Function to encrypt and decrypt at org heading.
