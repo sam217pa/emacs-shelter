@@ -21,9 +21,9 @@ be bound to a key. This function is of the form
 
 so that ``minimenu--call'' is only called when condition is
 satisfied, otherwise the key just self-insert."
-  (declare (debug t) (indent defun))
+  (declare (debug t) (indent defun) (doc-string 2))
   `(defmacro ,-name (name docstring collection)
-     (declare (debug t) (indent defun))
+     (declare (debug t) (indent defun) (doc-string 2))
      ,-docstring
        `(defun ,name (&optional arg)
           ,docstring
@@ -44,7 +44,7 @@ Keys should be a proper cons list of the given form:
 
 ;;; Minor mode definer
 
-(defmacro define-camp-mode (name docstring keys)
+(defmacro camp-define-mode (name docstring keys)
   "Helper for defining a minimenu-assisted minor mode.
 
 NAME is the name of the mode that is to be assisted.
@@ -53,15 +53,15 @@ DOCSTRING is the documentation string of the minor mode.
 
 KEYS is a cons list of key-function association that constitutes
 the camp minor mode."
-  (declare (debug t) (indent 1))
+  (declare (debug t) (doc-string 2) (indent 1))
   (let
-      ((mm-minor-mode (intern (format "minimenu-%s-minor-mode" name)))
-       (mm-keymap (intern (format "minimenu-%s-mode-map" name)))
-       (mm-group (intern (format "minimenu-%s" name)))
+      ((mm-minor-mode (intern (format "camp-%s-minor-mode" name)))
+       (mm-keymap (intern (format "camp-%s-mode-map" name)))
+       (mm-group (intern (format "camp-%s" name)))
        (mm-lighter " mm"))
     `(progn
        (defvar ,mm-keymap (make-sparse-keymap))
-       (minimenu--define-keys ,mm-keymap ,keys)
+       (camp--define-keys ,mm-keymap ,keys)
        (define-minor-mode ,mm-minor-mode
          ,docstring
          :keymap ,mm-keymap
