@@ -1,15 +1,14 @@
 ;; -*- lexical-binding: t -*-
 
-(require 'minimenu)
 (require 'camp)
 
-(camp-defmacro minimenu-org-defun-heading
+(camp-defmacro camp-org-defun-at-heading
   "Define minimenu function for org mode when point is at
 heading."
   (and (looking-at org-outline-regexp)
        (looking-back "^\**" (point-at-bol))))
 
-(minimenu-org-defun-heading mm-org-heading
+(camp-org-defun-at-heading camp-org-heading
   "Function to encrypt and decrypt at org heading.
 
 Serves as complement of speed commands for org buffers"
@@ -17,6 +16,6 @@ Serves as complement of speed commands for org buffers"
     ("d" 'org-decrypt-entry "decrypt")))
 
 ;;;###autoload
-(minimenu-define-minor-mode org
+(camp-define-mode org
   "Minimenu minor mode for org"
-  '(("x" . mm-org-heading)))
+  '(("x" . camp-org-heading)))

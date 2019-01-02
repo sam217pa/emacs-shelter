@@ -11,6 +11,8 @@
 a closing paren."
   (camp--at-paren-p))
 
+;;; Emacs lisp
+
 (camp-defun-at-paren camp-emacs-lisp-navigate
   "Actions for navigating in emacs lisp."
   '(("b" 'backward-sexp "back sexp")
@@ -26,19 +28,21 @@ a closing paren."
     ("c" 'byte-compile-file  "byte compile")))
 
 ;;;###autoload
-(minimenu-define-minor-mode emacs-lisp
+(camp-define-mode emacs-lisp
   "Minimenu minor-mode for emacs-lisp"
   '(("x" . camp-emacs-lisp-eval)
     ("f" . camp-emacs-lisp-navigate)))
 
-(camp-defun-at-paren minimenu-lisp-eval
+;;; Common Lisp
+
+(camp-defun-at-paren camp-lisp-eval
   "Minimenu evaluation for common lisp"
   '(("e" 'slime-eval-last-expression "sexp")
     ("m" 'slime-macroexpand-1        "expand-1")))
 
 ;;;###autoload
-(minimenu-define-minor-mode common-lisp
+(camp-define-mode common-lisp
   "Minimenu minor mode for common lisp"
-  '(("x" . minimenu-lisp-eval)))
+  '(("x" . camp-lisp-eval)))
 
-(provide 'minimenu-lisp)
+(provide 'camp-lisp)
