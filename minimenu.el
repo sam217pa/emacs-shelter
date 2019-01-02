@@ -2,6 +2,11 @@
 
 (require 'cl-lib)
 
+(defcustom minimenu-max-lines 5
+  "Maximum number of lines to be displayed in minimenus."
+  :type 'integer
+  :group 'minimenu)
+
 (defvar minimenu-ov nil
   "Default minimenu overlay.
 
@@ -37,8 +42,11 @@ overlay."
     (overlay-put minimenu-ov 'after-string "")
     (overlay-put minimenu-ov 'priority 9999)))
 
-(defmacro minimenu--propertize (str &rest arg)
-  `(propertize ,str 'face ,@arg))
+(defsubst minimenu--unpropertize (str)
+  (substring-no-properties str))
+
+(defun minimenu--propertize (str &rest arg)
+  (propertize (minimenu--unpropertize str) 'face arg))
 
 (defun minimenu--propertize-key (key-value)
   "Add text properties to the key in KEY-VALUE."
@@ -63,16 +71,38 @@ overlay."
 
 MAX-PAD is the length of the longest string in KEY-VALUE, so that
 highlight of shorter string are of the same length."
-  (let*
-      ((key (minimenu--propertize-key key-value))
-       (fun (minimenu--propertize-value key-value max-pad))
-       (str (format "%s - %s" key fun)))
-    (minimenu--propertize-bg str)))
+  (if (null key-value)
+      ""
+    (let*
+        ((key (minimenu--propertize-key key-value))
+         (fun (minimenu--propertize-value key-value max-pad))
+         (str (format "%s - %s" key fun)))
+      (minimenu--propertize-bg str))))
 
 (defsubst minimenu--max-text-length (col)
   "Returns the maximum text length of collection."
   (apply #'max (cl-loop for x in col
                         collect (length (cdr x)))))
+
+(defun minimenu--group (source n)
+  (if (zerop n) (error "zero length"))
+  (cl-labels ((rec (source acc)
+                   (let ((rest (nthcdr n source)))
+                     (if (consp rest)
+                         (rec rest (cons (cl-subseq source 0 n) acc))
+                       (nreverse (cons source acc))))))
+    (if source (rec source nil) nil)))
+
+(defun minimenu--map2concat (col padding f &optional args)
+  (mapconcat
+   #'identity
+   (mapcar
+    (lambda (x)
+      (format "%s %s"
+              (funcall f (car x) args)
+              (funcall f (cadr x) args)))
+    (minimenu--group col 2))
+   (concat "\n" padding)))
 
 (defun minimenu--flatten-col (col padding)
   "Flatten the collection COL and add PADDING if necessary.
@@ -81,15 +111,15 @@ Return collection COL as a single string that is left padded
 so that text is displayed aligned to the point.
 
 Text is propertized correctly."
-  (let*
-      ((pad (minimenu--max-text-length col))
-       (str
-        (mapconcat
-         (lambda (x) (minimenu--propertize-key-value x pad))
-         col
-         (concat "\n" padding))))
-    (minimenu--propertize-bg
-     (concat padding str "\n"))))
+  (minimenu--propertize-bg
+   (concat
+    padding
+    (minimenu--map2concat
+     col padding
+     #'minimenu--propertize-key-value
+     (minimenu--max-text-length col))
+    "\n")))
+
 
 (defun minimenu--left-pad ()
   "Returns an empty string of width corresponding to number of
@@ -175,7 +205,7 @@ associated to input key."
     (minimenu--display col-print)
     ;; read input key
     (let ((key (single-key-description
-                (read-key "Choose key: "))))
+                (read-key "Choose minimenu key ..."))))
       (minimenu-ov-cleanup)
       (cond
        ((equal key "C-g")
