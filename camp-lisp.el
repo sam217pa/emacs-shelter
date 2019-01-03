@@ -2,11 +2,11 @@
 
 (require 'camp)
 
-(defun camp--at-paren-p ()
+(defsubst camp--at-paren-p ()
   "Returns t if point is after a closing paren."
-  (looking-back "\)" (1- (point))))
+  (or (camp-bk "\)") (camp-at "\(")))
 
-(camp-defmacro camp-defun-at-paren
+(defcamper camp-defun-at-paren
   "Define minimenu function for lisp when point is after
 a closing paren."
   (camp--at-paren-p))
