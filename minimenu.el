@@ -94,15 +94,14 @@ highlight of shorter string are of the same length."
     (if source (rec source nil) nil)))
 
 (defun minimenu--map2concat (col padding f &optional args)
-  (mapconcat
-   #'identity
-   (mapcar
-    (lambda (x)
-      (format "%s %s"
-              (funcall f (car x) args)
-              (funcall f (cadr x) args)))
-    (minimenu--group col 2))
-   (concat "\n" padding)))
+  (apply #'concat
+   (cl-loop
+    for x in (minimenu--group col 2)
+    collect
+    (format "%s %s\n%s"
+            (funcall f (car x) args)
+            (funcall f (cadr x) args)
+            padding))))
 
 (defun minimenu--flatten-col (col padding)
   "Flatten the collection COL and add PADDING if necessary.
@@ -135,12 +134,18 @@ overlay."
        (str (minimenu--flatten-col col padding)))
     (minimenu--overlay str)))
 
-(defun minimenu--call-candidate-function (key col)
+(defun minimenu--handle-fun (l)
+  (let ((f (cdr l)))
+    (if (commandp (cadr f))
+        (cadr f)
+      f)))
+
+(defun minimenu--call-function (key col)
   "Call the function associated to KEY in COL."
   (let ((x (assoc key col)))
     (if x
-        (let ((f (cdr x)))
-          (call-interactively (if (symbolp f) f (intern f))))
+        (call-interactively
+         (minimenu--handle-fun x))
       (message "Quit"))))
 
 (defmacro minimenu--get-fun (x)
@@ -166,14 +171,13 @@ overlay."
 
 (defun minimenu--sanitize-key-desc (col)
   "Returns the plist representation of keys in COL."
-  (cl-flet*
-      ((f (fun) (intern (symbol-name (cadr fun))))
-       (g (fun) (symbol-name (cadr fun)))
-       (h (x) (list
-               (elt x 0)
-               `(:fun  ,(f (elt x 1))
-                 :desc ,(or (elt x 2) (g (elt x 1)))))))
-    (cl-loop for x in col collect (h x))))
+  (cl-loop
+   for l in col
+   collect
+   (let ((key (elt l 0))
+         (fun (elt l 1))
+         (des (or (elt l 2) "nil")))
+     `(,key (:fun ,fun :desc ,des)))))
 
 (defsubst minimenu--plist-p (col)
   "Check that every element of COL has a :fun property."
@@ -194,9 +198,7 @@ if not, sanitize them with ``minimenu--sanitize-key-desc''."
 ;;;###autoload
 (defun minimenu-call (col)
   "Display COL alist in an overlay and call the function
-associated to input key.
-
-"
+associated to input key."
   (let*
       ((col (minimenu--rectify-col col))
        ;; col-print is the printed representation of col
@@ -213,6 +215,6 @@ associated to input key.
        ((equal key "C-g")
         (message "Quit"))
        (t
-        (minimenu--call-candidate-function key col-fun))))))
+        (minimenu--call-function key col-fun))))))
 
 (provide 'minimenu)
