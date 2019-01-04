@@ -64,8 +64,8 @@ overlay."
 
 (defun minimenu--overlay (str)
   "Display STR in the ``minimenu-ov'' overlay."
-  (let ((beg (if (bolp) (point) (1- (point))))
-        (end (line-end-position)))
+  (let ((beg (point))
+        (end (1+ (line-end-position))))
     (when cursor-type
       (setq minimenu--old-cursor-type cursor-type)
       (setq cursor-type nil))
@@ -90,8 +90,7 @@ overlay."
   "Add text properties to the value in KEY-VALUE."
   (let*
       ((v (cdr key-value))
-       (text (if (symbolp v) (symbol-name v) v))
-       (str (concat text (make-string (- max-pad (length text)) ?\s))))
+       (str (concat v (make-string (- max-pad (length v)) ?\s))))
     (minimenu--propertize str 'highlight)))
 
 (defmacro minimenu--propertize-bg (str)
