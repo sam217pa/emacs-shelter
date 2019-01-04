@@ -27,9 +27,6 @@
 (require 'minimenu)
 (require 'easy-mmode)
 
-;; TODO: write docstring for camp macros [2019-01-03 16:57]
-;; FIXME: handle cases when function is called directly from minibuffer [2019-01-03 00:49]
-
 ;;; Camper
 
 (defun camp--region-p (x)
@@ -144,32 +141,6 @@ Search for RE to the character right before point.
 
 Alias for `looking-back'."
   (looking-back re (1- (point))))
-
-;;; Minor mode definer
-
-(defmacro camp-define-mode (name docstring keys)
-  "Helper for defining a minimenu-assisted minor mode.
-
-NAME is the name of the mode that is to be assisted.
-
-DOCSTRING is the documentation string of the minor mode.
-
-KEYS is a cons list of key-function association that constitutes
-the camp minor mode."
-  (declare (debug t) (doc-string 2) (indent 1))
-  (let
-      ((mm-minor-mode (make-symbol (format "camp-%s-minor-mode" name)))
-       (mm-keymap (make-symbol (format "camp-%s-mode-map" name)))
-       (mm-group (make-symbol (format "camp-%s" name)))
-       (mm-lighter " mm"))
-    `(progn
-       (defvar ,mm-keymap (make-sparse-keymap))
-       (easy-mmode-define-keymap ,keys ,mm-keymap)
-       (define-minor-mode ,mm-minor-mode
-         ,docstring
-         :keymap ,mm-keymap
-         :group ,mm-group
-         :lighter ,mm-lighter))))
 
 (defun camp--group (source n)
   "Divide SOURCE list in N groups and stack together the last
