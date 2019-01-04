@@ -24,10 +24,12 @@
 
 ;;; Code:
 
+;;;; Require
+
 (require 'minimenu)
 (require 'easy-mmode)
 
-;;; Camper
+;;;; Camper
 
 (defun camp--region-p (x)
   "Handles the REG keyword.
@@ -117,23 +119,16 @@ Each camp clauses _must_ include four elements."
      (or (camp ,@args)
          (self-insert-command arg))))
 
-;; TODO: camp should call the next command on minor-mode-map alist instead of self-insert-command [2019-01-04 11:15]
+;;;; Helpers
 
-;; yasnippet do this by temporarily disabling the mode and looking up
-;; the key that was used to call the current command in the mode map.
-
-;; (defun camp--beyond ()
-;;  camp-minor-mode
-;;  this-single-command)
-
-;;; Helpers
-
+;;;###autoload
 (defsubst camp-at (re)
   "Return t if point is looking at RE.
 
 Alias for `looking-at'."
   (looking-at re))
 
+;;;###autoload
 (defsubst camp-bk (re)
   "Return t if point is looking back at RE.
 
@@ -153,6 +148,8 @@ elements.
                          (rec rest (cons (cl-subseq source 0 n) acc))
                        (nreverse (cons source acc))))))
     (if source (rec source nil) nil)))
+
+;;;; Keys
 
 (defsubst camp--defkeys (keys map)
   "Helper for `define-key' that define KEYS in keymap MAP.
