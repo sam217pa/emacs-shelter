@@ -192,6 +192,7 @@ is suitable to `define-key'."
    for key in keys
    do (define-key map (kbd (car key)) (cdr key))))
 
+;;;###autoload
 (defmacro camp-defkeymap (name docstring keys)
   "Define a new camp minor mode keymap for mode NAME.
 
@@ -202,7 +203,7 @@ camp keymap for org-mode, one would call (camp-defkeymap org
 DOCSTRING is the documentation of the keymap. KEYS are passed to
 `define-key' by `camp--defkeys'."
   (declare (indent 1) (doc-string 2))
-  (let ((kmp (make-symbol (format "camp-%s-map" name))))
+  (let ((kmp (intern (format "camp-%s-map" name))))
     `(progn
        (defvar ,kmp (make-sparse-keymap) ,docstring)
        (camp--defkeys ,keys ,kmp))))
