@@ -1,11 +1,11 @@
-* TODO support tabulating
+* WAIT support tabulating to more than two column ?
 When many are provided, support tabulating them as in:
 
 #+begin_example
 a - function | b - function
 c - function | d - function
 #+end_example
-* TODO overlay should overrides faces
+* WAIT overlay should overrides faces
 
 For example in org mode, the title faces are echoed in the overlay.
 Maybe should find a way to reset faces to their default before
