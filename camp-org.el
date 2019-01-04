@@ -32,8 +32,8 @@
 Serves as complement of speed commands for org buffers"
   if (and (camp-at org-outline-regexp)
           (camp-bk "^\**"))
-  mm '(("e" 'org-encrypt-entry "encrypt")
-       ("d" 'org-decrypt-entry "decrypt")))
+  mm '(("e" org-encrypt-entry "encrypt")
+       ("d" org-decrypt-entry "decrypt")))
 
 (camp-defkeymap org
   "Camp minor mode for org"

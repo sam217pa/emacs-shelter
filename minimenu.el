@@ -84,7 +84,7 @@ overlay."
 
 (defun minimenu--propertize-key (key-value)
   "Add text properties to the key in KEY-VALUE."
-  (minimenu--propertize (car key-value) 'bold))
+  (minimenu--propertize (car key-value) 'link))
 
 (defun minimenu--propertize-value (key-value max-pad)
   "Add text properties to the value in KEY-VALUE."
@@ -96,8 +96,9 @@ overlay."
 (defmacro minimenu--propertize-bg (str)
   "Rectify overlay background to default background color"
   `(propertize
-   ,str
-   'font-lock-face `(:background ,(face-background 'default))))
+    ,str
+    'font-lock-face `(:background ,(face-background 'default)
+                                  :foreground ,(face-foreground 'default))))
 
 (defun minimenu--propertize-key-value (key-value max-pad)
   "Returns a correctly formatted and propertized key-functions.
@@ -114,11 +115,11 @@ highlight of shorter string are of the same length."
 
 (defsubst minimenu--max-text-length (col)
   "Returns the maximum text length of collection."
-  (apply #'max (cl-loop for x in col
-                        collect (length (cdr x)))))
+  (apply #'max (cl-loop for x in col collect (length (cdr x)))))
 
 (defun minimenu--map2concat (col padding f &optional args)
-  (apply #'concat
+  (apply
+   #'concat
    (cl-loop
     for x in (camp--group col 2)
     collect
@@ -143,18 +144,20 @@ Text is propertized correctly."
      (minimenu--max-text-length col))
     "\n")))
 
+(defsubst minimenu--empty-width ()
+  (- (point) (point-at-bol)))
 
 (defun minimenu--left-pad ()
   "Returns an empty string of width corresponding to number of
 characters between point and beginning of line."
-  (let ((width (- (point) (point-at-bol))))
-    (if (bolp) "" (make-string (1- width) ?\s))))
+  (if (bolp) "" (make-string (minimenu--empty-width) ?\s)))
 
 (defun minimenu--display (col)
   "Display collection left padded in the `minimenu-ov' overlay."
   (let*
       ((padding (minimenu--left-pad))
-       (str (minimenu--flatten-col col padding)))
+       (str (minimenu--flatten-col (minimenu--make-print col)
+                                   padding)))
     (minimenu--overlay str)))
 
 (defun minimenu--truncate-desc (str)
@@ -164,54 +167,25 @@ characters between point and beginning of line."
    nil nil "…"))
 
 (defsubst minimenu--get-fun (x)
-  (plist-get (cadr x) :fun))
+  (elt x 1))
 
 (defsubst minimenu--get-desc (x)
-  (minimenu--truncate-desc
-   (plist-get (cadr x) :desc)))
+  (minimenu--truncate-desc (elt x 2)))
 
 (defun minimenu--make-collection (col)
   (cl-loop
    for x in col
-   collect (list (car x)
-                 (minimenu--get-fun x))))
+   collect (list (car x) (minimenu--get-fun x))))
 
 (defun minimenu--make-print (col)
   (cl-loop
    for x in col
-   collect (cons (car x)
-                 (minimenu--get-desc x))))
-
-(defun minimenu--sanitize-key-desc (col)
-  "Returns the plist representation of keys in COL."
-  (cl-loop
-   for l in col
-   collect
-   (let ((key (elt l 0))
-         (fun (elt l 1))
-         (des (or (elt l 2) "nil")))
-     `(,key (:fun ,fun :desc ,des)))))
-
-(defsubst minimenu--plist-p (col)
-  "Check that every element of COL has a :fun property."
-  (cl-loop
-   for x in col
-   always (plist-member (cadr x) :fun)))
-
-(defun minimenu--rectify-col (col)
-  "Returns the plist representation of keys in COL.
-
-Checks that COL is a plist representation of keys-functions and
-if not, sanitize them with ``minimenu--sanitize-key-desc''."
-  (if (minimenu--plist-p col)
-      col
-    (or (minimenu--sanitize-key-desc col)
-        (error "At least one element of COL have no :fun."))))
+   collect (cons (car x) (minimenu--get-desc x))))
 
 (defun minimenu--set-transient-map (col)
   (let ((map (make-sparse-keymap)))
     (cl-loop
-     for key in col
+     for key in (minimenu--make-collection col)
      do (define-key map (car key) (cadr key)))
     (set-transient-map map nil #'minimenu--ov-cleanup)))
 
@@ -219,17 +193,11 @@ if not, sanitize them with ``minimenu--sanitize-key-desc''."
 (defun minimenu-call (col)
   "Display COL alist in an overlay and call the function
 associated to input key."
-  (let*
-      ((col (minimenu--rectify-col col))
-       ;; col-print is the printed representation of col
-       (col-print (minimenu--make-print col))
-       ;; col-fun is the alist representation of col
-       (col-fun (minimenu--make-collection col)))
-    ;; display the collection
-    (minimenu--display col-print)
-    ;; parse next user key
-    (minimenu--set-transient-map col-fun)
-    (message "Minimenu on")))
+  ;; display the collection
+  (minimenu--display col)
+  ;; parse next user key
+  (minimenu--set-transient-map col)
+  (message "Minimenu on"))
 
 (provide 'minimenu)
 ;;; minimenu.el ends here
