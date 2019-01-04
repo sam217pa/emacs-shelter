@@ -25,19 +25,19 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'mule-util)                    ;for truncate-string-to-width
-
-;; FIXME: maybe should use set-transient-map instead of read-... [2019-01-03 20:53]
+(require 'mule-util)                    ; for truncate-string-to-width
 
 (defcustom minimenu-max-lines 5
   "Maximum number of lines to be displayed in minimenus."
   :type 'integer
   :group 'minimenu)
 
-(defcustom minimenu-max-description-length 10
+(defcustom minimenu-max-description-length 15
   "Maximum number of character for key description."
   :type 'integer
   :group 'minimenu)
+
+;;;; Minimenu displaying
 
 (defvar minimenu-ov nil
   "Default minimenu overlay.
@@ -50,7 +50,7 @@ function.")
 
 It can be restored after the overlay has been cleaned up.")
 
-(defun minimenu-ov-cleanup ()
+(defun minimenu--ov-cleanup ()
   "Reset the minimenu overlay.
 
 Set the ``minimenu-ov'' to nil and delete the corresponding
@@ -59,7 +59,8 @@ overlay."
     (delete-overlay minimenu-ov)
     (setq minimenu-ov nil)
     (unless cursor-type
-      (setq cursor-type minimenu--old-cursor-type))))
+      (setq cursor-type minimenu--old-cursor-type)))
+  (message "Minimenu off"))
 
 (defun minimenu--overlay (str)
   "Display STR in the ``minimenu-ov'' overlay."
@@ -72,7 +73,8 @@ overlay."
     (overlay-put minimenu-ov 'display str)
     (overlay-put minimenu-ov 'before-string "\n")
     (overlay-put minimenu-ov 'after-string "")
-    (overlay-put minimenu-ov 'priority 9999)))
+    (overlay-put minimenu-ov 'priority 9999)
+    nil))
 
 (defsubst minimenu--unpropertize (str)
   (substring-no-properties str))
@@ -150,26 +152,11 @@ characters between point and beginning of line."
     (if (bolp) "" (make-string (1- width) ?\s))))
 
 (defun minimenu--display (col)
-  "Display collection left padded in the ``minimenu-ov''
-overlay."
+  "Display collection left padded in the `minimenu-ov' overlay."
   (let*
       ((padding (minimenu--left-pad))
        (str (minimenu--flatten-col col padding)))
     (minimenu--overlay str)))
-
-(defun minimenu--handle-fun (l)
-  (let ((f (cdr l)))
-    (if (commandp (cadr f))
-        (cadr f)
-      f)))
-
-(defun minimenu--call-function (key col)
-  "Call the function associated to KEY in COL."
-  (let ((x (assoc key col)))
-    (if x
-        (call-interactively
-         (minimenu--handle-fun x))
-      (message "Quit"))))
 
 (defun minimenu--truncate-desc (str)
   (truncate-string-to-width
@@ -177,19 +164,18 @@ overlay."
    (1+  minimenu-max-description-length)
    nil nil "…"))
 
-(defmacro minimenu--get-fun (x)
-  `(plist-get (cadr ,x) :fun))
+(defsubst minimenu--get-fun (x)
+  (plist-get (cadr x) :fun))
 
-(defmacro minimenu--get-desc (x)
-  `(minimenu--truncate-desc
-    (plist-get (cadr ,x) :desc)))
+(defsubst minimenu--get-desc (x)
+  (minimenu--truncate-desc
+   (plist-get (cadr x) :desc)))
 
 (defun minimenu--make-collection (col)
   (cl-loop
    for x in col
-   collect
-   (cons (car x)
-         (minimenu--get-fun x))))
+   collect (list (car x)
+                 (minimenu--get-fun x))))
 
 (defun minimenu--make-print (col)
   (cl-loop
@@ -223,6 +209,13 @@ if not, sanitize them with ``minimenu--sanitize-key-desc''."
     (or (minimenu--sanitize-key-desc col)
         (error "At least one element of COL have no :fun."))))
 
+(defun minimenu--set-transient-map (col)
+  (let ((map (make-sparse-keymap)))
+    (cl-loop
+     for key in col
+     do (define-key map (car key) (cadr key)))
+    (set-transient-map map nil #'minimenu--ov-cleanup)))
+
 ;;;###autoload
 (defun minimenu-call (col)
   "Display COL alist in an overlay and call the function
@@ -235,15 +228,9 @@ associated to input key."
        (col-fun (minimenu--make-collection col)))
     ;; display the collection
     (minimenu--display col-print)
-    ;; read input key
-    (let ((key (single-key-description
-                (read-key "Choose minimenu key ..."))))
-      (minimenu-ov-cleanup)
-      (cond
-       ((equal key "C-g")
-        (message "Quit"))
-       (t
-        (minimenu--call-function key col-fun))))))
+    ;; parse next user key
+    (minimenu--set-transient-map col-fun)
+    (message "Minimenu on")))
 
 (provide 'minimenu)
 ;;; minimenu.el ends here
