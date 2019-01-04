@@ -1,9 +1,17 @@
 ;; -*- lexical-binding: t -*-
 
 (require 'cl-lib)
+(require 'mule-util)                    ;for truncate-string-to-width
+
+;; FIXME: maybe should use set-transient-map instead of read-... [2019-01-03 20:53]
 
 (defcustom minimenu-max-lines 5
   "Maximum number of lines to be displayed in minimenus."
+  :type 'integer
+  :group 'minimenu)
+
+(defcustom minimenu-max-description-length 10
+  "Maximum number of character for key description."
   :type 'integer
   :group 'minimenu)
 
@@ -84,19 +92,10 @@ highlight of shorter string are of the same length."
   (apply #'max (cl-loop for x in col
                         collect (length (cdr x)))))
 
-(defun minimenu--group (source n)
-  (if (zerop n) (error "zero length"))
-  (cl-labels ((rec (source acc)
-                   (let ((rest (nthcdr n source)))
-                     (if (consp rest)
-                         (rec rest (cons (cl-subseq source 0 n) acc))
-                       (nreverse (cons source acc))))))
-    (if source (rec source nil) nil)))
-
 (defun minimenu--map2concat (col padding f &optional args)
   (apply #'concat
    (cl-loop
-    for x in (minimenu--group col 2)
+    for x in (camp--group col 2)
     collect
     (format "%s %s\n%s"
             (funcall f (car x) args)
@@ -148,11 +147,18 @@ overlay."
          (minimenu--handle-fun x))
       (message "Quit"))))
 
+(defun minimenu--truncate-desc (str)
+  (truncate-string-to-width
+   str
+   (1+  minimenu-max-description-length)
+   nil nil "…"))
+
 (defmacro minimenu--get-fun (x)
   `(plist-get (cadr ,x) :fun))
 
 (defmacro minimenu--get-desc (x)
-  `(plist-get (cadr ,x) :desc))
+  `(minimenu--truncate-desc
+    (plist-get (cadr ,x) :desc)))
 
 (defun minimenu--make-collection (col)
   (cl-loop
@@ -162,12 +168,10 @@ overlay."
          (minimenu--get-fun x))))
 
 (defun minimenu--make-print (col)
-  (cl-flet ((get-desc (x)
-             (or (minimenu--get-desc x)
-                 (symbol-name (minimenu--get-fun x)))))
-    (cl-loop
-     for x in col
-     collect (cons (car x) (get-desc x)))))
+  (cl-loop
+   for x in col
+   collect (cons (car x)
+                 (minimenu--get-desc x))))
 
 (defun minimenu--sanitize-key-desc (col)
   "Returns the plist representation of keys in COL."
