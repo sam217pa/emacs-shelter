@@ -26,7 +26,7 @@
 
 ;;;; Require
 
-(require 'minimenu)
+(require 'tent)
 (require 'easy-mmode)
 
 ;;;; Camper
@@ -51,12 +51,12 @@ ARG must be a list of four elements as returned by `camp'.
 Three action keywords are recognized:
 - CALL: funcall the next argument
 - DO  : just execute the next argument.
-- MM  : call `minimenu-call' on the next argument."
+- TENT : call `tent' on the next argument."
   (or
    (pcase (elt arg 2)
      ('call `(camp--fc ,(elt arg 3)))
      ('do    (elt arg 3))
-     ('mm   `(minimenu-call ,(elt arg 3))))
+     ('tent `(tent ,(elt arg 3))))
    (error "Unrecognized camp keyword")))
 
 (defun camp--conds (arg)
@@ -100,7 +100,7 @@ A typical camp call would be:
 
 Three conditions can be checked: AT, BK and IF (see also
 `camp--conds'). Three actions can be executed: DO, CALL and
-MM (see also `camp--kwd').
+TENT (see also `camp--kwd').
 
 Each camp clauses _must_ include four elements."
   (declare (debug t) (indent 0))
