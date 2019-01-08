@@ -27,6 +27,7 @@
 (require 'camp-utils)
 (require 'camp-lisp)
 (require 'camp-org)
+(require 'camp-text)
 
 (defvar camp-keymap (make-sparse-keymap))
 
