@@ -43,15 +43,15 @@
 (defcamp camp-emacs-lisp-eval
   "Actions for evaluating in emacs lisp."
   if (camp--at-paren-p)
-  tent '(("b" eval-buffer "whole buffer")
+  tent '(("b" eval-buffer "buffer")
          ("e" eval-last-sexp "last sexp")
-         ("x" eval-defun "eval defun")
+         ("x" eval-defun "defun")
          ("m" pp-macroexpand-last-sexp "macro expand")))
 
 (camp-defkeymap emacs-lisp
   "Camp keymap for emacs lisp"
-  '(("x" . camp-emacs-lisp-eval)
-    ("f" . camp-emacs-lisp-navigate)))
+  '(("e" . camp-emacs-lisp-eval)
+    ("n" . camp-emacs-lisp-navigate)))
 
 ;;; Common Lisp
 
