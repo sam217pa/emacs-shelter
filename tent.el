@@ -206,7 +206,7 @@ menu is removed."
   (let ((map (make-sparse-keymap)))
     (cl-loop
      for key in (tent--make-collection col)
-     do (define-key map (car key) (cadr key)))
+     do (define-key map (kbd (car key)) (cadr key)))
     (set-transient-map map nil #'tent--ov-cleanup)))
 
 ;;;###autoload
