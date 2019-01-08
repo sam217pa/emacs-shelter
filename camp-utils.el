@@ -137,6 +137,20 @@ Search for RE to the character right before point.
 Alias for `looking-back'."
   (looking-back re (1- (point))))
 
+;;;###autoload
+(defmacro camp-or (clause &rest body)
+  "Equivalent to `or' that recursively wraps each CLAUSE of BODY
+in `ignore-errors'."
+  (declare (indent 0))
+  (if (null body)
+      `(ignore-errors ,clause)
+    `(or (ignore-errors ,clause)
+         (camp-or ,@body))))
+
+(defmacro camp-stay (&rest body)
+  "Evaluates BODY but leaves point at point."
+  `(save-excursion ,@body))
+
 (defun camp--group (source n)
   "Divide SOURCE list in N groups and stack together the last
 elements.

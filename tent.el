@@ -23,6 +23,8 @@
 ;;
 
 ;; TODO: [2019-01-06 16:30] make transient map redisplay overlay if permanent
+;; FIXME: [2019-01-06 19:19] bug when point is at eob, no tent is displayed.
+;; TODO: [2019-01-08 13:26] add a timer so that tent is displayed only after timer seconds of inactivity
 
 ;;; Code:
 

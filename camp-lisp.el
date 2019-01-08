@@ -32,6 +32,26 @@
 
 ;;; Emacs lisp
 
+(defcamp camp-emacs-lisp-next
+  "Next semantic element in emacs lisp"
+  bk "\)" do (camp-or (forward-list) (up-list))
+  at "\(" do (camp-or (progn (forward-list 2) (backward-sexp))
+                      (up-list)))
+
+(defcamp camp-emacs-lisp-prev
+  "Previous semantic element in emacs lisp"
+  at "\(" do (camp-or (backward-list) (up-list -1))
+  bk "\)" do (camp-or (progn (backward-list 2) (forward-sexp))
+                      (up-list -1)))
+
+(defcamp camp-emacs-lisp-fwd
+  "Forward semantic element in emacs lisp"
+  if (camp--at-paren-p) do (camp-or (forward-sexp)))
+
+(defcamp camp-emacs-lisp-bwd
+  "Backward semantic element in emacs lisp"
+  if (camp--at-paren-p) do (camp-or (backward-sexp)))
+
 (defcamp camp-emacs-lisp-navigate
   "Actions for navigating in emacs lisp."
   if (camp--at-paren-p)
@@ -42,6 +62,8 @@
 
 (defcamp camp-emacs-lisp-eval
   "Actions for evaluating in emacs lisp."
+  at "\(" do (camp-or (camp-stay (forward-sexp)
+                                 (call-interactively #'eval-last-sexp)))
   if (camp--at-paren-p)
   tent '(("b" eval-buffer "buffer")
          ("e" eval-last-sexp "last sexp")
@@ -51,7 +73,10 @@
 (camp-defkeymap emacs-lisp
   "Camp keymap for emacs lisp"
   '(("e" . camp-emacs-lisp-eval)
-    ("n" . camp-emacs-lisp-navigate)))
+    ("n" . camp-emacs-lisp-next)
+    ("p" . camp-emacs-lisp-prev)
+    ("b" . camp-emacs-lisp-bwd)
+    ("f" . camp-emacs-lisp-fwd)))
 
 ;;; Common Lisp
 
