@@ -27,12 +27,17 @@
 (require 'camp-utils)
 (require 'camp-macs)
 
+(defun camp--default-map (map)
+  (if (eq map 'camp-keymap)
+      'camp-keymap
+    (intern (format "camp-%s-map" map))))
+
 (cl-defmacro camp-define-keys (&key map simple)
   "doc"
-  (let ((kmp (intern (format "camp-%s-map" map))))
+  (let ((kmp (camp--default-map map)))
     `(progn
-       (unless ,kmp
-         (defvar ,kmp
+       (unless (boundp ',kmp)
+         (defvar ,kmp (make-sparse-keymap)
            ,(format "Camp sharp keymap for %s mode" map)))
        ,@(mapcar
           (lambda (pair)

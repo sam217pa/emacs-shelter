@@ -32,29 +32,18 @@
   :type 'string
   :group 'fort)
 
-(defmacro fort-defkeymap (name docstring &optional keys)
-  "Define a new fort minor mode keymap for mode NAME.
-
-NAME should not include \"-mode\". For instance, to define a new
-fort keymap for org-mode, one would call (fort-defkeymap org
-...).
-
-DOCSTRING is the documentation of the keymap. KEYS are passed to
-`define-key' by `camp--defkeys'."
-  (declare (indent 1) (doc-string 2))
-  (let ((kmp (intern (format "fort-%s-map" name))))
-    `(progn
-       (defvar ,kmp (make-sparse-keymap) ,docstring)
-       (when ,keys (camp--defkeys ,keys ,kmp))
-       (define-key ,kmp (kbd fort-default-key) 'fort))))
+(defun fort--default-keymap (map)
+  (if (eq map 'fort-keymap)
+      'fort-keymap
+    (intern (format "fort-%s-map" map))))
 
 (cl-defmacro fort-define-keys (&key map simple iron)
   "doc"
   (declare (debug t))
-  (let ((kmp (intern (format "fort-%s-map" map))))
+  (let ((kmp (fort--default-keymap map)))
     `(progn
-       (unless ,kmp
-         (defvar ,kmp
+       (unless (boundp ',kmp)
+         (defvar ,kmp (make-sparse-keymap)
            ,(format "Fort sharp keymap for %s mode" map)))
        ,@(mapcar
           (lambda (pair)

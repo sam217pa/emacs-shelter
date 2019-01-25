@@ -27,6 +27,9 @@
 (require 'camp-utils)
 (require 'fort)
 
+;; silence byte-compiler
+(defvar org-outline-regexp)
+
 (defcamp camp-org-heading
   "Function to encrypt and decrypt at org heading.
 
