@@ -25,10 +25,6 @@
 ;;; Code:
 
 (require 'camp-utils)
-(require 'camp-lisp)
-(require 'camp-org)
-(require 'camp-text)
-
 (require 'camp-macs)
 
 (camp-sharp-minor camp

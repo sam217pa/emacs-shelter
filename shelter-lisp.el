@@ -1,4 +1,4 @@
-;;; camp-lisp.el --- camp commands for lisp and emacs lisp  -*- lexical-binding: t; -*-
+;;; shelter-lisp.el --- shelter commands for lisp and emacs lisp  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Samuel BARRETO
 
@@ -103,5 +103,5 @@
   "Camp keymap for common lisp"
   '(("x" . camp-lisp-eval)))
 
-(provide 'camp-lisp)
-;;; camp-lisp.el ends here.
+(provide 'shelter-lisp)
+;;; shelter-lisp.el ends here.

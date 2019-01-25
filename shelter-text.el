@@ -1,4 +1,4 @@
-;;; camp-text.el --- camp helpers for text modes     -*- lexical-binding: t; -*-
+;;; shelter-text.el --- camp helpers for text modes     -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Samuel Barreto
 
@@ -83,5 +83,5 @@ punctuation sign."
       ("f" forward-sentence "fwd sentence")
       ("m" camp-mark-bwd-sentence "mark")))
 
-(provide 'camp-text)
-;;; camp-text.el ends here
+(provide 'shelter-text)
+;;; shelter-text.el ends here

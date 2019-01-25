@@ -28,6 +28,10 @@
 (require 'camp)
 (require 'fort)
 
+(require 'shelter-text)
+(require 'shelter-org)
+(require 'shelter-lisp)
+
 (fort-define-keys
  ("f f" 'find-file
   "i s" 'isearch-forward

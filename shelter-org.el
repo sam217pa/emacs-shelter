@@ -1,4 +1,4 @@
-;;; camp-org.el --- camp commands for org mode       -*- lexical-binding: t; -*-
+;;; shelter-org.el --- shelter commands for org mode       -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Samuel BARRETO
 
@@ -43,4 +43,5 @@ Serves as complement of speed commands for org buffers"
 (fort-defkeymap org
   "Fort keymap for org.")
 
-(provide 'camp-org)
+(provide 'shelter-org)
+;;; shelter-org.el ends here.
