@@ -3,13 +3,9 @@
 (require 'minimenu)
 (require 'camp)
 
-(defvar minimenu--test-col
-  '(("a" . "counsel-colors-web")
-    ("b" . "counsel-colors-web")))
-
 (minimenu-call
- '(("e" (:fun (lambda () (interactive) (message "patate")) :desc "encrypt"))
-   ("d" (:fun org-decrypt-entry :desc "decrypt"))))
+ '(("e" (:fun (lambda () (interactive) (message "patate")) :desc "message"))
+   ("d" (:fun counsel-colors-web :desc "colors web"))))
 
 (defun minimenu--test-fun ()
   (interactive)
@@ -18,20 +14,28 @@
 (let*
     ((col
       '(("e" (lambda () (interactive) (message "patate")))
-        ("d" 'minimenu--test-fun "test"))))
+        ("d" minimenu--test-fun "test"))))
   (camp
-    bk "\)" call #'forward-sexp))
+    bk "\)" mm col))
 
-(not
- (cond
-  (t (forward-sexp))
-  (else nil)))
+(minimenu--rectify-col
+ '(("e" (lambda () (interactive) (message "patate")))
+   ("d" minimenu--test-fun "test")))
+
+(defun camp-x ()
+  (interactive)
+  (message "%s" (this-single-command-raw-keys)))
 
 (defcamp camp-x ""
-  bk "\)" do (message "cuicui")
+  if rom do (fort)
+  bk "\)" do (fort)
   at "\]" do (message "patate")
-  if (region-active-p) do (message "region"))
+  if reg do (message "region")) 
 
+(define-key emacs-lisp-mode-map (kbd "x") 'camp-x)
 
+(define-key fort-emacs-lisp-map (kbd "SPC s") 'save-buffer)
 
-(define-key emacs-lisp-mode-map (kbd "ç") 'camp-x)
+(fort-define-keys
+ ("b b" 'ivy-switch-buffer
+  "b s" 'save-buffer))

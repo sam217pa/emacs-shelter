@@ -1,9 +1,9 @@
-;;; camp-org.el --- camp commands for org mode       -*- lexical-binding: t; -*-
+;;; shelter.el --- tent, camp, fort and so forth     -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Samuel BARRETO
+;; Copyright (C) 2019  Samuel Barreto
 
-;; Author: Samuel BARRETO <samuel.barreto8@gmail.com>
-;; Keywords: convenience, org
+;; Author: Samuel Barreto <samuel.barreto8@gmail.com>
+;; Keywords: keybindings, conv, convenience
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,23 +24,16 @@
 
 ;;; Code:
 
-(require 'camp-utils)
+(require 'tent)
+(require 'camp)
 (require 'fort)
 
-(defcamp camp-org-heading
-  "Function to encrypt and decrypt at org heading.
+(fort-define-keys
+ ("f f" 'find-file
+  "i s" 'isearch-forward
+  "i r" 'isearch-backward
+  "b b" 'switch-to-buffer
+  "b o" 'switch-to-buffer-other-window))
 
-Serves as complement of speed commands for org buffers"
-  if (and (camp-at org-outline-regexp)
-          (camp-bk "^\**"))
-  tent '(("e" org-encrypt-entry "encrypt")
-         ("d" org-decrypt-entry "decrypt")))
-
-(camp-defkeymap org
-  "Camp keymap for org"
-  '(("x" . camp-org-heading)))
-
-(fort-defkeymap org
-  "Fort keymap for org.")
-
-(provide 'camp-org)
+(provide 'shelter)
+;;; shelter.el ends here

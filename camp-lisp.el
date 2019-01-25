@@ -25,6 +25,7 @@
 ;;; Code:
 
 (require 'camp-utils)
+(require 'fort)
 
 (defsubst camp--at-paren-p ()
   "Returns t if point is after a closing paren."
@@ -70,13 +71,25 @@
          ("x" eval-defun "defun")
          ("m" pp-macroexpand-last-sexp "macro expand")))
 
+(defcamp camp-emacs-lisp-exec
+  "Execute stuffs in emacs lisp"
+  if (camp--at-paren-p) do (fort))
+
 (camp-defkeymap emacs-lisp
   "Camp keymap for emacs lisp"
   '(("e" . camp-emacs-lisp-eval)
     ("n" . camp-emacs-lisp-next)
     ("p" . camp-emacs-lisp-prev)
     ("b" . camp-emacs-lisp-bwd)
-    ("f" . camp-emacs-lisp-fwd)))
+    ("f" . camp-emacs-lisp-fwd)
+    ("x" . camp-emacs-lisp-exec)))
+
+(fort-defkeymap emacs-lisp
+  "essai de keymap fort pour emacs-lisp"
+  '(("t" . next-line)
+    ("s" . previous-line)
+    ("r" . forward-char)
+    ("c" . backward-char)))
 
 ;;; Common Lisp
 

@@ -27,17 +27,21 @@
 ;;;; Require
 
 (require 'tent)
-(require 'easy-mmode)
 
 ;;;; Camper
 
-(defun camp--region-p (x)
-  "Handles the REG keyword.
+(defsubst camp--rom-p ()
+  "Return t if `buffer-read-only' is."
+  (or buffer-read-only))
 
-X must be a list of four elements."
-  (if (eql (elt x 1) 'reg)
-      '(region-active-p)
-    (elt x 1)))
+(defun camp--seconds (x)
+  "Handles the second keyword.
+
+(X must be a list of four elements.)"
+  (pcase (elt x 1)
+    ('reg '(region-active-p))
+    ('rom '(camp--rom-p))
+    (_ (elt x 1))))
 
 (defsubst camp--fc (f)
   "Wraps (funcall F) in `ignore-errors' so that camp is mostly silent for functions like `forward-sexp'."
@@ -77,7 +81,7 @@ executed only if:
             ,(camp--kwd arg) t))
      ('bk `((camp-bk ,(elt arg 1))
             ,(camp--kwd arg) t))
-     ('if `(,(camp--region-p arg)
+     ('if `(,(camp--seconds arg)
             ,(camp--kwd arg) t)))
    (error "Unrecognized camp keyword")))
 
@@ -105,9 +109,7 @@ TENT (see also `camp--kwd').
 Each camp clauses _must_ include four elements."
   (declare (debug t) (indent 0))
   `(cond
-   ,@(cl-loop
-      for a in (camp--group args 4)
-      collect (camp--conds a))))
+    ,@(mapcar #'camp--conds (camp--group args 4))))
 
 ;;;###autoload
 (defmacro defcamp (name docstring &rest args)
@@ -148,7 +150,9 @@ in `ignore-errors'."
          (camp-or ,@body))))
 
 (defmacro camp-stay (&rest body)
-  "Evaluates BODY but leaves point at point."
+  "Evaluates BODY but leaves point at point.
+
+Equivalent to `save-excursion'."
   `(save-excursion ,@body))
 
 (defun camp--group (source n)
@@ -189,7 +193,6 @@ DOCSTRING is the documentation of the keymap. KEYS are passed to
     `(progn
        (defvar ,kmp (make-sparse-keymap) ,docstring)
        (camp--defkeys ,keys ,kmp))))
-
 
 (provide 'camp-utils)
 ;;; camp-utils.el ends here.

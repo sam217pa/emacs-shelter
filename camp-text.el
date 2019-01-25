@@ -26,16 +26,55 @@
 
 (require 'camp-utils)
 
+;;;###autoload
 (defun camp-bwd-sentence (&optional arg)
+  "Wrapper around `backward-sentence' that tries to go to the
+punctuation sign."
   (interactive)
   (backward-sentence arg)
-  (backward-char 1))
+  (unless (bolp)
+    (backward-char 1)))
 
+;;;###autoload
+(defalias 'camp-fwd-sentence 'forward-sentence)
+
+;;;###autoload
 (defun camp-mark-bwd-sentence (&optional arg)
   (interactive)
   (camp-bwd-sentence arg)
   (mark-end-of-sentence (or arg 1)))
 
+;;;###autoload
+(defcamp camp-outline
+    "Camp commands when looking at outlines"
+    at outline-regexp tent
+    '(("a" outline-show-all "show all")
+      ("e" outline-show-entry "show entry")
+      ("B" outline-show-children "show children")
+      ("k" outline-show-branches "show branches")
+      ("s" outline-show-subtree "show subtree")
+
+      ("o" outline-hide-other "hide other")
+      ("q" outline-hide-sublevels "hide sublevels")
+      ("t" outline-hide-body "hide body")
+      ("c" outline-hide-entry "hide entry")
+      ("d" outline-hide-subtree "hide subtree")
+      ("l" outline-hide-leaves "hide leaves")
+
+      ("b" outline-backward-same-level "bkwd same lvl")
+      ("f" outline-forward-same-level "frwd same lvl")
+      ("u" outline-up-heading "up head")
+      ("p" outline-previous-visible-heading "prev head")
+      ("n" outline-next-visible-heading "next head")
+
+      ("T" outline-insert-heading "insert head")
+      ("v" outline-move-subtree-down "move down")
+      ("^" outline-move-subtree-up "move up")
+      ("<" outline-promote "promote")
+      (">" outline-demote "demote")
+      ("@" outline-mark-subtree "mark subtree")))
+
+;;;###autoload
 (defcamp camp-text
     "Camp commands for editing text."
     bk sentence-end-base tent
