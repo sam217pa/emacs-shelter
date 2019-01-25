@@ -3,7 +3,10 @@
 ;; Copyright (C) 2019  Samuel Barreto
 
 ;; Author: Samuel Barreto <samuel.barreto8@gmail.com>
-;; Keywords: keybindings, conv, convenience
+;; Maintainer: Samuel Barreto <samuel.barreto8@gmail.com>
+;; Version: 0.1.0
+;; Created: 2019-01-25
+;; Keywords: keybindings, keys, config
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -17,7 +20,7 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+
 ;;; Commentary:
 
 ;;
@@ -33,11 +36,22 @@
 (require 'shelter-lisp)
 
 (fort-define-keys
- ("f f" 'find-file
+ :map fort-keymap
+ :iron
+ ("o" 'open-line
+  "u" 'undo)
+ :simple
+ ("e" 'end-of-line
+  "a" 'beginning-of-line
+  "f f" 'find-file
   "i s" 'isearch-forward
   "i r" 'isearch-backward
   "b b" 'switch-to-buffer
-  "b o" 'switch-to-buffer-other-window))
+  "b o" 'switch-to-buffer-other-window
+  "SPC s" 'save-buffer))
+
+;;;###autoload
+(defalias 'shelter-mode 'camp-minor-mode)
 
 (provide 'shelter)
 ;;; shelter.el ends here

@@ -36,12 +36,10 @@ Serves as complement of speed commands for org buffers"
   tent '(("e" org-encrypt-entry "encrypt")
          ("d" org-decrypt-entry "decrypt")))
 
-(camp-defkeymap org
-  "Camp keymap for org"
-  '(("x" . camp-org-heading)))
-
-(fort-defkeymap org
-  "Fort keymap for org.")
+(camp-define-keys
+ :map org
+ :simple
+  ("x" 'camp-org-heading))
 
 (provide 'shelter-org)
 ;;; shelter-org.el ends here.

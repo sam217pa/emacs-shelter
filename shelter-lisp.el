@@ -75,21 +75,25 @@
   "Execute stuffs in emacs lisp"
   if (camp--at-paren-p) do (fort))
 
-(camp-defkeymap emacs-lisp
-  "Camp keymap for emacs lisp"
-  '(("e" . camp-emacs-lisp-eval)
-    ("n" . camp-emacs-lisp-next)
-    ("p" . camp-emacs-lisp-prev)
-    ("b" . camp-emacs-lisp-bwd)
-    ("f" . camp-emacs-lisp-fwd)
-    ("x" . camp-emacs-lisp-exec)))
+(camp-define-keys
+ :map emacs-lisp
+ :simple
+ ("e" 'camp-emacs-lisp-eval
+  "n" 'camp-emacs-lisp-next
+  "p" 'camp-emacs-lisp-prev
+  "b" 'camp-emacs-lisp-bwd
+  "f" 'camp-emacs-lisp-fwd
+  "x" 'camp-emacs-lisp-exec))
 
-(fort-defkeymap emacs-lisp
-  "essai de keymap fort pour emacs-lisp"
-  '(("t" . next-line)
-    ("s" . previous-line)
-    ("r" . forward-char)
-    ("c" . backward-char)))
+(fort-define-keys
+ :map emacs-lisp
+ :simple
+  ("b" 'eval-buffer
+   "B" 'byte-compile-file
+   "t" 'next-line
+   "s" 'previous-line
+   "r" 'forward-char
+   "c" 'backward-char))
 
 ;;; Common Lisp
 
@@ -99,9 +103,10 @@
   tent '(("e" slime-eval-last-expression "sexp")
          ("m" slime-macroexpand-1 "expand-1")))
 
-(camp-defkeymap lisp
-  "Camp keymap for common lisp"
-  '(("x" . camp-lisp-eval)))
+(camp-define-keys
+ :map lisp
+ :simple
+  ("x" 'camp-lisp-eval))
 
 (provide 'shelter-lisp)
 ;;; shelter-lisp.el ends here.

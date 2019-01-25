@@ -17,7 +17,7 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+
 ;;; Commentary:
 
 ;;
@@ -26,6 +26,19 @@
 
 (require 'camp-utils)
 (require 'camp-macs)
+
+(cl-defmacro camp-define-keys (&key map simple)
+  "doc"
+  (let ((kmp (intern (format "camp-%s-map" map))))
+    `(progn
+       (unless ,kmp
+         (defvar ,kmp
+           ,(format "Camp sharp keymap for %s mode" map)))
+       ,@(mapcar
+          (lambda (pair)
+            `(define-key ,kmp
+               (kbd ,(car pair)) ,(cadr pair)))
+          (camp--group simple 2)))))
 
 (camp-sharp-minor camp
   "Dress camp for current major mode.

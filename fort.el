@@ -48,9 +48,28 @@ DOCSTRING is the documentation of the keymap. KEYS are passed to
        (when ,keys (camp--defkeys ,keys ,kmp))
        (define-key ,kmp (kbd fort-default-key) 'fort))))
 
+(cl-defmacro fort-define-keys (&key map simple iron)
+  "doc"
+  (declare (debug t))
+  (let ((kmp (intern (format "fort-%s-map" map))))
+    `(progn
+       (unless ,kmp
+         (defvar ,kmp
+           ,(format "Fort sharp keymap for %s mode" map)))
+       ,@(mapcar
+          (lambda (pair)
+            `(define-key ,kmp
+               (kbd ,(car pair)) ,(cadr pair)))
+          (camp--group simple 2))
+       ,@(mapcar
+          (lambda (pair)
+            `(define-key ,kmp (kbd ,(car pair))
+               (fort-iron ,(cadr pair))))
+          (camp--group iron 2)))))
+
 ;;; Minor mode
 
-(defsubst fort--toggle ()
+(defun fort--toggle ()
   "Toggle `fort-minor-mode'."
   (if (camp--rom-p) (fort-minor-mode +1)
     (fort-minor-mode -1)))
@@ -59,8 +78,19 @@ DOCSTRING is the documentation of the keymap. KEYS are passed to
 (defun fort ()
   "Toggle a `fort-minor-mode' assisted read-only buffer."
   (interactive)
-  (toggle-read-only)
+  (read-only-mode 'toggle)
   (fort--toggle))
+
+(defmacro fort-iron (&rest args)
+  "Inhibit Read Only Now.
+
+Execute ARGS in a temporary deactivated read-only mode."
+  (declare (debug t) (indent 2))
+  `(lambda () (interactive)
+     (let ((inhibit-read-only t))
+       ,@(mapcar
+          (lambda (f) `(call-interactively ,f))
+          args))))
 
 ;;;###autoload
 (camp-sharp-minor fort

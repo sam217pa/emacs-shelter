@@ -24,46 +24,10 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl-lib))
+(require 'cl-lib)
 
 (require 'easy-mmode)
 (require 'camp-utils)
-
-(defmacro camp-key-definer (mmp)
-  "Return a macro named MMP-define-keys that wraps `define-key'
-around the minor-mode prefixed with MMP.
-
-For exemple, (camp-key-definer camp) returns the macro
-`camp-define-keys' that can be called
-  (camp-define-keys (\"x\" 'command))
-to add command to the default `camp-keymap'."
-  (let ((defkey (intern (format "%s-define-keys" mmp)))
-        (mmp-str (format "%s" mmp)))
-    `(progn
-       (cl-defmacro ,defkey (args &key (keymap nil))
-         ,(format "Add key-bindings in ARGS to \`%s-keymap\', or to\
- \`%s-KEYMAP-map\' when :KEYMAP is non nil." mmp-str mmp-str)
-         (let ((kmp (if keymap
-                        (intern (format "%s-%s-map" ,mmp-str keymap))
-                      (intern (format "%s-keymap" ,mmp-str)))))
-           `(progn
-              ,@(mapcar
-                 (lambda (pair)
-                   `(define-key ,kmp
-                      (kbd ,(car pair))
-                      ',(cadadr pair)))
-                 (camp--group args 2))))))))
-
-;; (defmacro camp-aif (test-form then-form &optional else-form)
-;;   (declare (indent 1))
-;;   `(let ((it ,test-form))
-;;      (if it ,then-form ,else-form)))
-
-;; (defmacro camp-awhen (test-form &body body)
-;;   (declare (indent 1))
-;;   `(camp-aif ,test-form
-;;      (progn ,@body)))
 
 (defun camp-macs--shorten-mjr ()
   "Return major-mode named stripped off its \"mode\" suffix if need be."
@@ -145,7 +109,6 @@ This macro defines two variables and four function:
        (defun ,lkup-map   () (camp-macs--map-for-major ,prefix))
        (defun ,activate   () (camp-macs--activater ,prefix))
        (defun ,deactivate () (camp-macs--deactivater ,prefix))
-       (camp-key-definer ,prefix)
        (define-minor-mode ,mnr-name
          ,docstring
          :keymap ,keymap

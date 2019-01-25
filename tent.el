@@ -1,31 +1,42 @@
 ;;; tent.el --- display commands in a menu at point  -*- lexical-binding: t; -*-
-
+;;
 ;; Copyright (C) 2019  Samuel BARRETO
-
+;;
 ;; Author: Samuel BARRETO <samuel.barreto8@gmail.com>
 ;; Keywords: convenience, keybindings, menu
-
+;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-;;; Commentary:
-
 ;;
-
+;;; Commentary:
+;;
+;; The tent.el package provides a single function =tent= that displays
+;; a list of commands and their corresponding keybindings in a small
+;; overlayed menu.
+;;
+;; In a similar vein as Hydra <https://github.com/abo-abo/hydra>, it
+;; provides a simple way to increase the number of
+;; within-two-key-strokes-available commands without resorting to
+;; complicated solutions. Unless hydra though, the menu is a simple
+;; tabular menu that is visible right under point, so that focus is
+;; not lose --- it matters on large screens.
+;;
+;;; Notes:
+;;
 ;; TODO: [2019-01-06 16:30] make transient map redisplay overlay if permanent
 ;; FIXME: [2019-01-06 19:19] bug when point is at eob, no tent is displayed.
 ;; TODO: [2019-01-08 13:26] add a timer so that tent is displayed only after timer seconds of inactivity
-
+;;
 ;;; Code:
 
 (require 'cl-lib)
