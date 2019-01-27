@@ -32,13 +32,40 @@
   :type 'string
   :group 'fort)
 
+;;;; Keybindings
+
 (defun fort--default-keymap (map)
+  "Handles cases when map is default keymap"
   (if (eq map 'fort-keymap)
       'fort-keymap
     (intern (format "fort-%s-map" map))))
 
+(defmacro fort-iron (&rest args)
+  "Inhibit Read Only Now.
+
+Execute ARGS in a temporary deactivated read-only mode."
+  (declare (debug t) (indent 2))
+  `(lambda () (interactive)
+     (let ((inhibit-read-only t))
+       ,@(mapcar
+          (lambda (f) `(call-interactively ,f))
+          args))))
+
 (cl-defmacro fort-define-keys (&key map simple iron)
-  "doc"
+  "Define key retranched in `fort'.
+
+Keys will be added to the fort keymap :MAP. All keys declared
+after :SIMPLE are, well, simple keybindings, in the form
+of (\"a\" 'command \"b\" 'command), where A and B are
+keybindings.
+
+All keys declared after :IRON are wrapped into `fort-iron', which
+inhibits read-only mode for the execution of the command only.
+Use it for commands that are to modify the buffer. Keys are
+declared the same way as for :SIMPLE.
+
+To bind keys to all fort keymap, use `fort-keymap' as argument
+to :MAP."
   (declare (debug t))
   (let ((kmp (fort--default-keymap map)))
     `(progn
@@ -56,7 +83,7 @@
                (fort-iron ,(cadr pair))))
           (camp--group iron 2)))))
 
-;;; Minor mode
+;;;; Minor mode
 
 (defun fort--toggle ()
   "Toggle `fort-minor-mode'."
@@ -69,17 +96,6 @@
   (interactive)
   (read-only-mode 'toggle)
   (fort--toggle))
-
-(defmacro fort-iron (&rest args)
-  "Inhibit Read Only Now.
-
-Execute ARGS in a temporary deactivated read-only mode."
-  (declare (debug t) (indent 2))
-  `(lambda () (interactive)
-     (let ((inhibit-read-only t))
-       ,@(mapcar
-          (lambda (f) `(call-interactively ,f))
-          args))))
 
 ;;;###autoload
 (camp-sharp-minor fort

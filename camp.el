@@ -28,12 +28,24 @@
 (require 'camp-macs)
 
 (defun camp--default-map (map)
+  "Handle cases when MAP is the default `camp-keymap'."
   (if (eq map 'camp-keymap)
       'camp-keymap
     (intern (format "camp-%s-map" map))))
 
 (cl-defmacro camp-define-keys (&key map simple)
-  "doc"
+  "Define keys when camp is dressed.
+
+This function adds commands defined in :SIMPLE to the camp keymap :MAP.
+Keybindings should be declared with
+
+  (\"a\" 'commanda \"b\" 'commandb)
+
+and so on, where A and B are keybindings that will be bound to
+their corresponding command.
+
+The camp keymap :MAP will be created if needed. To bind keys to
+all camp keymap, use `camp-keymap' as the argument to :MAP."
   (let ((kmp (camp--default-map map)))
     `(progn
        (unless (boundp ',kmp)

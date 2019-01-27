@@ -29,43 +29,59 @@
 (require 'easy-mmode)
 (require 'camp-utils)
 
-(defun camp-macs--shorten-mjr ()
+;; TODO: [2019-01-27 12:42] should search all derived keymap using
+;; (get MODE 'derived-mode-parent)
+
+;; note: recursive but shouldn't overflow, or else there is a big
+;; problem: no mode should inherit from 9999 parents.
+(defun camp-macs--derived-modes (mode)
+  "Return all modes that mode derives from."
+  (let ((drvd (get mode 'derived-mode-parent)))
+    (if drvd
+        (cons mode
+              (camp-macs--derived-modes drvd))
+      (cons mode nil))))
+
+(defun camp-macs--shorten-mjr (mode)
   "Return major-mode named stripped off its \"mode\" suffix if need be."
   (replace-regexp-in-string
    "-mode" ""
-   (symbol-name major-mode)))
+   (symbol-name mode)))
 
-(defmacro camp-macs--map-for-major (mmp)
+(defun camp-macs--map-for-major (mmp)
   "Return map for major mode associated with minor mode prefixed with MMP."
-  (let* ((mjr (camp-macs--shorten-mjr))
-         (mnr (format "%s" mmp))
-         (map (format "%s-%s-map" mnr mjr)))
-    `(progn
-       ,(intern-soft map))))
+  (mapcar #'intern-soft
+          (mapcar
+           (lambda (mjr) (format "%s-%s-map" mmp mjr))
+           (mapcar #'camp-macs--shorten-mjr
+                   (camp-macs--derived-modes major-mode)))))
 
-(defmacro camp-macs--activater (mmp)
+(defun camp-macs--activater (mmp)
   "Activate the minor mode prefixed with MMP by adding the corresponding
 map for major mode to the default map."
   (let ((mjr-map-fun (intern (format "%s--major-mode-map" mmp)))
         (mode-keymap (intern (format "%s-keymap" mmp)))
         (mm-name     (intern (format "%s-minor-mode" mmp)))
         (mm-override (intern (format "%s-minor-mode-override" mmp))))
-    `(let ((map (when (,mjr-map-fun)
-                  (set-keymap-parent (,mjr-map-fun) ,mode-keymap)
-                  (,mjr-map-fun))))
-       (if ,mm-override
-           (push (cons ',mm-name map)
-                 minor-mode-overriding-map-alist)
-         (setf (cdr (assoc ',mm-name minor-mode-map-alist))
-               map)))))
+    (let ((maps (funcall mjr-map-fun)))
+       (cl-loop
+        for mapname in maps
+        do (when mapname
+             (let ((map (eval mapname)))
+               (set-keymap-parent map (eval mode-keymap))
+               (if mm-override
+                   (push (cons mm-name map)
+                         minor-mode-overriding-map-alist)
+                 (setf (cdr (assoc mm-name minor-mode-map-alist))
+                       map))))))))
 
-(defmacro camp-macs--deactivater (mmp)
+(defun camp-macs--deactivater (mmp)
   "Remove traces of minor mode prefixed with MMP from the environment."
   (let ((mm-name (intern (format "%s-minor-mode" mmp))))
-    `(setq minor-mode-overriding-map-alist
-           (assq-delete-all
-            ',mm-name
-            minor-mode-overriding-map-alist))))
+    (setq minor-mode-overriding-map-alist
+          (assq-delete-all
+           mm-name
+           minor-mode-overriding-map-alist))))
 
 ;;;###autoload
 (defmacro camp-sharp-minor (prefix docstring &rest keys)
@@ -108,21 +124,23 @@ This macro defines two variables and four function:
        (defvar ,kmp-ovrd t)
        (defun ,lkup-map   ()
          ,(format "Return %s sharp keymap associated to major mode." prefix)
-         (camp-macs--map-for-major ,prefix))
+         (camp-macs--map-for-major ',prefix))
        (defun ,activate   ()
          ,(format "Activate %s sharp keymap by adding to and overriding `minor-mode-map-alist'"
                   prefix)
-         (camp-macs--activater ,prefix))
+         (camp-macs--activater ',prefix))
        (defun ,deactivate ()
          ,(format "Deactivate %s sharp keymap by removing traces of it from `minor-mode-map-alist'"
                   prefix)
-         (camp-macs--deactivater ,prefix))
+         (camp-macs--deactivater ',prefix))
        (define-minor-mode ,mnr-name
          ,docstring
          :keymap ,keymap
          :group ',prefix
          ,@keys
          (if ,mnr-name (,activate) (,deactivate))))))
+
+
 
 (provide 'camp-macs)
 ;;; camp-macs.el ends here
