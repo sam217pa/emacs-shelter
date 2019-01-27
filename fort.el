@@ -25,7 +25,7 @@
 ;;; Code:
 
 (require 'camp-utils)
-(require 'camp-macs)
+(require 'aeolian)
 
 (defcustom fort-default-key "x"
   "Default keybinding for leaving fort."
@@ -98,7 +98,7 @@ to :MAP."
   (fort--toggle))
 
 ;;;###autoload
-(camp-sharp-minor fort
+(aeolian-sharp-minor fort
   "Fort entranches buffer in read-only mode.
 
 Think bunker editing.

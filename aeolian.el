@@ -1,9 +1,9 @@
-;;; camp-macs.el --- macro helpers for tent, camp and fort.el  -*- lexical-binding: t; -*-
+;;; aeolian.el --- define major-mode dependent minor modes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Samuel BARRETO
 
 ;; Author: Samuel BARRETO <samuel.barreto8@gmail.com>
-;; Keywords: macros
+;; Keywords: minor-modes
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -34,29 +34,29 @@
 
 ;; note: recursive but shouldn't overflow, or else there is a big
 ;; problem: no mode should inherit from 9999 parents.
-(defun camp-macs--derived-modes (mode)
+(defun aeolian--derived-modes (mode)
   "Return all modes that mode derives from."
   (let ((drvd (get mode 'derived-mode-parent)))
     (if drvd
         (cons mode
-              (camp-macs--derived-modes drvd))
+              (aeolian--derived-modes drvd))
       (cons mode nil))))
 
-(defun camp-macs--shorten-mjr (mode)
+(defun aeolian--shorten-mjr (mode)
   "Return major-mode named stripped off its \"mode\" suffix if need be."
   (replace-regexp-in-string
    "-mode" ""
    (symbol-name mode)))
 
-(defun camp-macs--map-for-major (mmp)
+(defun aeolian--map-for-major (mmp)
   "Return map for major mode associated with minor mode prefixed with MMP."
   (mapcar #'intern-soft
           (mapcar
            (lambda (mjr) (format "%s-%s-map" mmp mjr))
-           (mapcar #'camp-macs--shorten-mjr
-                   (camp-macs--derived-modes major-mode)))))
+           (mapcar #'aeolian--shorten-mjr
+                   (aeolian--derived-modes major-mode)))))
 
-(defun camp-macs--activater (mmp)
+(defun aeolian--activater (mmp)
   "Activate the minor mode prefixed with MMP by adding the corresponding
 map for major mode to the default map."
   (let ((mjr-map-fun (intern (format "%s--major-mode-map" mmp)))
@@ -75,7 +75,7 @@ map for major mode to the default map."
                  (setf (cdr (assoc mm-name minor-mode-map-alist))
                        map))))))))
 
-(defun camp-macs--deactivater (mmp)
+(defun aeolian--deactivater (mmp)
   "Remove traces of minor mode prefixed with MMP from the environment."
   (let ((mm-name (intern (format "%s-minor-mode" mmp))))
     (setq minor-mode-overriding-map-alist
@@ -84,7 +84,7 @@ map for major mode to the default map."
            minor-mode-overriding-map-alist))))
 
 ;;;###autoload
-(defmacro camp-sharp-minor (prefix docstring &rest keys)
+(defmacro aeolian-sharp-minor (prefix docstring &rest keys)
   "Define a sharp minor mode, a minor mode with different flavors
 depending on current major mode.
 
@@ -124,15 +124,15 @@ This macro defines two variables and four function:
        (defvar ,kmp-ovrd t)
        (defun ,lkup-map   ()
          ,(format "Return %s sharp keymap associated to major mode." prefix)
-         (camp-macs--map-for-major ',prefix))
+         (aeolian--map-for-major ',prefix))
        (defun ,activate   ()
          ,(format "Activate %s sharp keymap by adding to and overriding `minor-mode-map-alist'"
                   prefix)
-         (camp-macs--activater ',prefix))
+         (aeolian--activater ',prefix))
        (defun ,deactivate ()
          ,(format "Deactivate %s sharp keymap by removing traces of it from `minor-mode-map-alist'"
                   prefix)
-         (camp-macs--deactivater ',prefix))
+         (aeolian--deactivater ',prefix))
        (define-minor-mode ,mnr-name
          ,docstring
          :keymap ,keymap
@@ -140,7 +140,5 @@ This macro defines two variables and four function:
          ,@keys
          (if ,mnr-name (,activate) (,deactivate))))))
 
-
-
-(provide 'camp-macs)
-;;; camp-macs.el ends here
+(provide 'aeolian)
+;;; aeolian.el ends here

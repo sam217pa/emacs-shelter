@@ -25,7 +25,7 @@
 ;;; Code:
 
 (require 'camp-utils)
-(require 'camp-macs)
+(require 'aeolian)
 
 (defun camp--default-map (map)
   "Handle cases when MAP is the default `camp-keymap'."
@@ -57,7 +57,7 @@ all camp keymap, use `camp-keymap' as the argument to :MAP."
                (kbd ,(car pair)) ,(cadr pair)))
           (camp--group simple 2)))))
 
-(camp-sharp-minor camp
+(aeolian-sharp-minor camp
   "Dress camp for current major mode.
 
 Activate the camp assisted commands for current major mode."
