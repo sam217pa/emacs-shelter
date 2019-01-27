@@ -26,6 +26,14 @@
 
 (require 'camp-utils)
 
+;;;; Customize
+
+(defcustom camp-text-remap-sentence-navigation nil
+  "Whether to remap the forward and backward sentence commands to
+their camp counterpart, `camp-bwd-sentence' and `camp-fwd-sentence'."
+  :type 'boolean
+  :group 'camp)
+
 ;;;###autoload
 (defun camp-bwd-sentence (&optional arg)
   "Wrapper around `backward-sentence' that tries to go to the
@@ -74,14 +82,52 @@ punctuation sign."
       (">" outline-demote "demote")
       ("@" outline-mark-subtree "mark subtree")))
 
-;;;###autoload
-(defcamp camp-text
+
+
+(cl-symbol-macrolet
+    ((bk-stce (or (camp-bk sentence-end-base) (bolp)))
+     (at-para (camp-stay (forward-line -1) (camp-at paragraph-start))))
+
+  (defcamp camp-text
     "Camp commands for editing text."
-    bk sentence-end-base tent
-    '(("s" save-buffer "save buffer")
+    if bk-stce tent
+    '(("x" fort "fort")
+      ("s" save-buffer "save buffer")
       ("b" camp-bwd-sentence "bwd sentence")
       ("f" forward-sentence "fwd sentence")
       ("m" camp-mark-bwd-sentence "mark")))
+
+  (defcamp camp-text-next
+    "Commands for next semantic element when at camp."
+    at "" do (forward-page)
+    if at-para do (forward-paragraph)
+    if bk-stce do (camp-fwd-sentence))
+
+  (defcamp camp-text-prev
+    "Commands for previous semantic element when at camp."
+    at "" do (backward-page)
+    if at-para do (backward-paragraph)
+    if bk-stce do (camp-bwd-sentence))
+
+  (defcamp camp-text-execute
+    "Execute commands when camp is dressed in text mode."
+    if bk-stce do (fort)))
+
+(camp-define-keys
+ :map text
+ :simple ("t" 'camp-text
+          "x" 'camp-text-execute
+          "o" 'camp-outline
+          "n" 'camp-text-next
+          "p" 'camp-text-prev))
+
+(fort-define-keys
+ :map text
+ :simple ("h" 'mark-whole-buffer))
+
+(when camp-text-remap-sentence-navigation
+  (global-set-key [remap forward-sentence] 'camp-fwd-sentence)
+  (global-set-key [remap backward-sentence] 'camp-bwd-sentence))
 
 (provide 'shelter-text)
 ;;; shelter-text.el ends here

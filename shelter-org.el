@@ -30,14 +30,17 @@
 ;; silence byte-compiler
 (defvar org-outline-regexp)
 
-(defcamp camp-org-heading
-  "Function to encrypt and decrypt at org heading.
+(cl-symbol-macrolet
+    ((at-outl (and (camp-at org-outline-regexp)
+                   (camp-bk "^\**"))))
+
+  (defcamp camp-org-heading
+    "Function to encrypt and decrypt at org heading.
 
 Serves as complement of speed commands for org buffers"
-  if (and (camp-at org-outline-regexp)
-          (camp-bk "^\**"))
-  tent '(("e" org-encrypt-entry "encrypt")
-         ("d" org-decrypt-entry "decrypt")))
+    if at-outl
+    tent '(("e" org-encrypt-entry "encrypt")
+           ("d" org-decrypt-entry "decrypt"))))
 
 (camp-define-keys
  :map org

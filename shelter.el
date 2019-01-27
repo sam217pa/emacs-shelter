@@ -4,7 +4,7 @@
 
 ;; Author: Samuel Barreto <samuel.barreto8@gmail.com>
 ;; Maintainer: Samuel Barreto <samuel.barreto8@gmail.com>
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Created: 2019-01-25
 ;; Keywords: keybindings, keys, config
 
@@ -23,7 +23,23 @@
 
 ;;; Commentary:
 
+;; Shelter is a collection of presets that provides commands for
+;; editing when in what could be called a "secure" position, i.e. when
+;; point is after or before a character that delimits a semantic
+;; entity, or when buffer is in read-only mode.
 ;;
+;; It does so with the help of the `tent' package, that deploys
+;; a temporary mini-menu in an overlay at point; the `camp' package,
+;; that defines self-inserting commands which action depends on local
+;; context; and the `fort' package, that defines commands only
+;; effective in read-only mode.
+;;
+;; The `camp' and `fort' package defines minor modes using the
+;; `aeolian' package. It allows defining minor-modes whose flavor
+;; depends on the associated major-mode, the so-called sharp minor
+;; modes.
+
+
 
 ;;; Code:
 
@@ -31,6 +47,7 @@
 (require 'camp)
 (require 'fort)
 
+;; shelter presets
 (require 'shelter-text)
 (require 'shelter-org)
 (require 'shelter-lisp)
@@ -44,20 +61,19 @@ Defaults to t."
 (when shelter-remap-read-only
   (global-set-key [remap read-only-mode] #'fort))
 
+;; defaults fort fort-keymap, serves as example.
 (fort-define-keys
  :map fort-keymap
- :iron
- ("o" 'open-line
-  "u" 'undo)
- :simple
- ("e" 'end-of-line
-  "a" 'beginning-of-line
-  "f f" 'find-file
-  "i s" 'isearch-forward
-  "i r" 'isearch-backward
-  "b b" 'switch-to-buffer
-  "b o" 'switch-to-buffer-other-window
-  "SPC s" 'save-buffer))
+ :iron   ("o" 'open-line
+          "u" 'undo)
+ :simple ("e" 'end-of-line
+          "a" 'beginning-of-line
+          "f f" 'find-file
+          "i s" 'isearch-forward
+          "i r" 'isearch-backward
+          "b b" 'switch-to-buffer
+          "b o" 'switch-to-buffer-other-window
+          "SPC s" 'save-buffer))        ; spacemacs like.
 
 ;;;###autoload
 (defalias 'shelter-mode 'camp-minor-mode)

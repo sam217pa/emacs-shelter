@@ -20,7 +20,9 @@
 
 ;;; Commentary:
 
-;;
+;; Aeolian provides a single macro, aeolian-sharp-minor, which helps
+;; to define a minor mode whose flavor depends on the major-mode it is
+;; associated to.
 
 ;;; Code:
 
@@ -93,7 +95,7 @@ The defined minor mode is called PREFIX-minor-mode, documented by
 DOCSTRING. KEYS will be passed to `define-minor-mode', to enable
 further package description.
 
-This macro defines two variables and four function:
+This macro defines two variables and four functions:
 - PREFIX-keymap, the default keymap for minor mode, empty by default.
 - PREFIX-minor-mode-override, set to t by default. It sets whether or
     not the minor mode overrides other keybindings in the keymap.

@@ -68,6 +68,7 @@
   if (camp--at-paren-p)
   tent '(("b" eval-buffer "buffer")
          ("e" eval-last-sexp "last sexp")
+         ("E" pp-eval-last-sexp "pretty last sexp")
          ("x" eval-defun "defun")
          ("m" pp-macroexpand-last-sexp "macro expand")))
 

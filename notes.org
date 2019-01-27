@@ -7,6 +7,6 @@ c - function | d - function
 #+end_example
 * WAIT overlay should overrides faces
 
-For example in org mode, the title faces are echoed in the overlay.
-Maybe should find a way to reset faces to their default before
-propertizing the menu.
+For example in org mode, the title faces are echoed in the
+overlay. Maybe should find a way to reset faces to their default
+before propertizing the menu.
