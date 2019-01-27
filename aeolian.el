@@ -25,12 +25,7 @@
 ;;; Code:
 
 (require 'cl-lib)
-
 (require 'easy-mmode)
-(require 'camp-utils)
-
-;; TODO: [2019-01-27 12:42] should search all derived keymap using
-;; (get MODE 'derived-mode-parent)
 
 ;; note: recursive but shouldn't overflow, or else there is a big
 ;; problem: no mode should inherit from 9999 parents.
