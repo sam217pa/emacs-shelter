@@ -35,6 +35,15 @@
 (require 'shelter-org)
 (require 'shelter-lisp)
 
+(defcustom shelter-remap-read-only t
+  "Whether to remap read-only keybindings (C-x C-q) to `fort'.
+Defaults to t."
+  :type 'boolean
+  :group 'shelter)
+
+(when shelter-remap-read-only
+  (global-set-key [remap read-only-mode] #'fort))
+
 (fort-define-keys
  :map fort-keymap
  :iron
