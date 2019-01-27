@@ -106,9 +106,17 @@ This macro defines two variables and four function:
     `(progn
        (defvar ,keymap (make-sparse-keymap))
        (defvar ,kmp-ovrd t)
-       (defun ,lkup-map   () (camp-macs--map-for-major ,prefix))
-       (defun ,activate   () (camp-macs--activater ,prefix))
-       (defun ,deactivate () (camp-macs--deactivater ,prefix))
+       (defun ,lkup-map   ()
+         ,(format "Return %s sharp keymap associated to major mode." prefix)
+         (camp-macs--map-for-major ,prefix))
+       (defun ,activate   ()
+         ,(format "Activate %s sharp keymap by adding to and overriding `minor-mode-map-alist'"
+                  prefix)
+         (camp-macs--activater ,prefix))
+       (defun ,deactivate ()
+         ,(format "Deactivate %s sharp keymap by removing traces of it from `minor-mode-map-alist'"
+                  prefix)
+         (camp-macs--deactivater ,prefix))
        (define-minor-mode ,mnr-name
          ,docstring
          :keymap ,keymap
