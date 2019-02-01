@@ -108,5 +108,10 @@ be remmaped to other commands for the time being. It provides
 a kind of modal editing."
   :lighter " fort ")
 
+(fort-define-keys
+ :map fort-keymap
+ :simple
+  (fort-default-key 'fort))
+
 (provide 'fort)
 ;;; fort.el ends here
