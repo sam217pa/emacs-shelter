@@ -28,11 +28,20 @@
 
 ;;;; Customize
 
-(defcustom camp-text-remap-sentence-navigation nil
+(defgroup shelter-text nil
+  "Commands for text editing at shelter."
+  :group 'shelter
+  :prefix "shelter-text-")
+
+(defcustom shelter-text-remap-sentence-navigation nil
   "Whether to remap the forward and backward sentence commands to
 their camp counterpart, `camp-bwd-sentence' and `camp-fwd-sentence'."
   :type 'boolean
-  :group 'camp)
+  :group 'shelter-text)
+
+(when shelter-text-remap-sentence-navigation
+  (global-set-key [remap forward-sentence] 'camp-fwd-sentence)
+  (global-set-key [remap backward-sentence] 'camp-bwd-sentence))
 
 ;;;###autoload
 (defun camp-bwd-sentence (&optional arg)
@@ -84,9 +93,18 @@ punctuation sign."
 
 
 
+(defsubst camp-fwd-paragraph ()
+  (forward-paragraph 1))
+
+(defsubst camp-bwd-paragraph ()
+  (backward-paragraph 1))
+
 (cl-symbol-macrolet
-    ((bk-stce (or (camp-bk sentence-end-base) (bolp)))
-     (at-para (camp-stay (forward-line -1) (camp-at paragraph-start))))
+    ((bk-stce  (or (camp-bk sentence-end-base) (bolp)))
+     (at-para  (and (bolp) (camp-at paragraph-start)))
+     (at-p-beg (and (bolp) (camp-stay (forward-line -1)
+                                      (and (bolp) (eolp)))))
+     (emptyl   (and (bolp) (eolp))))
 
   (defcamp camp-text
     "Camp commands for editing text."
@@ -97,16 +115,24 @@ punctuation sign."
       ("f" forward-sentence "fwd sentence")
       ("m" camp-mark-bwd-sentence "mark")))
 
+  (defcamp camp-text-up
+    "Go up"
+    if at-p-beg do (forward-line -1))
+
+  (defcamp camp-text-down
+    "Go down"
+    if emptyl do (forward-line 1))
+
   (defcamp camp-text-next
     "Commands for next semantic element when at camp."
     at "" do (forward-page)
-    if at-para do (forward-paragraph)
+    if at-para do (camp-fwd-paragraph)
     if bk-stce do (camp-fwd-sentence))
 
   (defcamp camp-text-prev
     "Commands for previous semantic element when at camp."
     at "" do (backward-page)
-    if at-para do (backward-paragraph)
+    if at-para do (camp-bwd-paragraph)
     if bk-stce do (camp-bwd-sentence))
 
   (defcamp camp-text-execute
@@ -115,7 +141,9 @@ punctuation sign."
 
 (camp-define-keys
  :map text
- :simple ("t" 'camp-text
+ :simple ("," 'camp-text
+          "t" 'camp-text-down
+          "s" 'camp-text-up
           "x" 'camp-text-execute
           "o" 'camp-outline
           "n" 'camp-text-next
@@ -124,10 +152,6 @@ punctuation sign."
 (fort-define-keys
  :map text
  :simple ("h" 'mark-whole-buffer))
-
-(when camp-text-remap-sentence-navigation
-  (global-set-key [remap forward-sentence] 'camp-fwd-sentence)
-  (global-set-key [remap backward-sentence] 'camp-bwd-sentence))
 
 (provide 'shelter-text)
 ;;; shelter-text.el ends here
