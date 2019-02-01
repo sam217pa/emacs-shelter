@@ -55,13 +55,14 @@ ARG must be a list of four elements as returned by `camp'.
 Three action keywords are recognized:
 - CALL: funcall the next argument
 - DO  : just execute the next argument.
-- TENT : call `tent' on the next argument."
-  (or
-   (pcase (elt arg 2)
-     ('call `(camp--fc ,(elt arg 3)))
-     ('do    (elt arg 3))
-     ('tent `(tent ,(elt arg 3))))
-   (error "Unrecognized camp keyword")))
+- TENT: call `tent' on the next argument.
+- CMD : call next argument interactively"
+  (pcase (elt arg 2)
+    ('call `(camp--fc ,(elt arg 3)))
+    ('do    (elt arg 3))
+    ('tent `(tent ,(elt arg 3)))
+    ('cmd  `(call-interactively ,(elt arg 3)))
+    (_ (error "Unrecognized camp keyword"))))
 
 (defun camp--conds (arg)
   "Handles camp condition keywords.
