@@ -109,5 +109,29 @@
  :simple
   ("x" 'camp-lisp-eval))
 
+;;; Scheme
+
+(defcamp camp-scheme-eval
+  "Evaluation for scheme."
+  at "\(" do (camp-or
+               (camp-stay
+                (forward-sexp)
+                (call-interactively #'geiser-eval-last-sexp)))
+  if (camp--at-paren-p)
+  tent '(("b" geiser-eval-buffer "buffer")
+         ("e" geiser-eval-last-sexp "last sexp")
+         ("x" geiser-eval-definition "defun")
+         ("m" geiser-expand-last-sexp "macro expand")))
+
+
+(camp-define-keys
+ :map scheme
+ :simple
+  ("n" 'camp-emacs-lisp-next
+   "p" 'camp-emacs-lisp-prev
+   "b" 'camp-emacs-lisp-bwd
+   "f" 'camp-emacs-lisp-fwd
+   "e" 'camp-scheme-eval))
+
 (provide 'shelter-lisp)
 ;;; shelter-lisp.el ends here.
