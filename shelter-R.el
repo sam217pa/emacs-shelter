@@ -20,11 +20,18 @@
 
 ;;; Commentary:
 
-;;
+;; This file provides commands for editing R code using the `ess'
+;; emacs extension. The idea is to be able to edit R code as you would
+;; normally, but that otherwise self-inserting commands have behaviors
+;; that depend on the local context around point. For instance, the
+;; _e_ key could be used to evaluate the previous S-expression after
+;; a closing paren, to evaluate the preceding function definition
+;; after a closing curly bracket, to evaluate the paragraph at an
+;; empty line, and so on.
 
 ;;; Code:
 
-
+;; TODO: [2019-02-11 21:56] add autoload cookies, but where?
 
 (require 'cl-lib)
 
@@ -34,11 +41,28 @@
 (require 'fort)
 (require 'tent)
 
+;;;; Silence byte-compiler
+
+(defmacro shelter-r--declare-functions (&rest funs)
+  "Silence the byte-compiler."
+  (declare (indent 0))
+  `(progn ,@(mapcar (lambda (x) `(declare-function ,x "ess-site")) funs)))
+
+(shelter-r--declare-functions
+  ess-send-string ess-eval-region
+  ess-roxy-toggle-roxy-region ess-execute
+  ess-goto-beginning-of-function-or-para)
+
+(defvar ess-current-process-name nil)
+
+;;;; Customisation
+
 (defgroup shelter-r nil
   "Shelter commands for editing R source code"
   :prefix "shelter-r-"
   :group 'shelter )
 
+;; FIXME: implement default evaluation style.
 (defcustom shelter-r-eval-style 'stay
   "Style of evaluation for R buffers."
   :type '(choice
@@ -49,11 +73,11 @@
 
 (defvar shelter-r-opening-delim
   "(\\|{\\|\\["
-  "ess opening delimiter")
+  "Ess opening delimiters")
 
 (defvar shelter-r-closing-delim
   ")\\|}\\|\\]\\|[A-Za-Z\\\"]\\\""
-  "ess closing delimiter")
+  "Ess closing delimiters")
 
 (defun shelter-r--bwd-list ( )
   "Move backward list element conservatively"
@@ -62,7 +86,8 @@
     (forward-list)))
 
 (defmacro shelter-r--with-proc (proc &rest body)
-  "Execute BODY in an environment where"
+  "Execute BODY in an environment where PROC is bound to
+`ess-current-process-name'."
   (declare (indent 1))
   `(let ((,proc (get-process ess-current-process-name)))
      ,@body))
@@ -104,13 +129,6 @@
       (forward-sentence)
       (ess-roxy-toggle-roxy-region beg (point)))))
 
-;; TODO: define command to select and comment wip
-;; TODO: define command to fold wip (hideshow maybe?)
-;; (defun shelter-r--wip-comment (beg end)
-;;   (interactive "r")
-;;   ())
-
-
 (defmacro shelter-cmd (&rest args)
   `(lambda () (interactive)
      ,@(mapcar
@@ -142,28 +160,58 @@
   "getwd()" "> getwd"
   "Get current R working directory"))
 
+;;;; WIP editing
+;;
+;; WIP regions are regions of a buffer surrounded by /* */, as
+;; described in the spin documentation
+;; <https://github.com/yihui/knitr/blob/master/inst/examples/knitr-spin.R>.
+;; They can be used to wrap a region that is to be removed later or
+;; a just a simple draft or attempt at something.
+
+;; TODO: define command to fold wip (hideshow maybe?)
 
 (defun shelter-r--wip-get ()
+  "Return the beginning and end point of the work-in-progress
+cookies surrounding point."
   (camp-stay
    (list
     (re-search-backward "^## \/\\*")
     (re-search-forward "^## .+\\*\/"))))
 
 (defmacro shelter-r--wip-apply (cmd)
+  "Apply CMD to the work-in-progress around point."
   `(apply ,cmd (shelter-r--wip-get)))
 
 (defun shelter-r-wip-delete ()
+  "Delete the work-in-progress around point."
   (interactive)
   (shelter-r--wip-apply #'kill-region))
 
 (defun shelter-r-wip-eval ()
+  "Evaluate the whole work-in-progress block around point."
   (interactive)
   (shelter-r--wip-apply #'shelter-r--eval-region))
 
 (defun shelter-r-wip-comment ()
+  "Comment out the work-in-progress around point."
   (interactive)
   (shelter-r--wip-apply #'comment-region))
 
+;;;; Evaluation
+
+(defun shelter-r--eval-defun ()
+  "Evaluate function definition or paragraph in R code.
+
+When point precedes the %>% magrittr pipe or a ggplot '+'
+overloaded operator, this functions evaluates only from beginning
+of paragraph (often the beginning of pipeline) to point."
+  (interactive)
+  (if (and (camp-at " %>%$\\| \\+$")
+           (camp-bk shelter-r-closing-delim))
+      (shelter-r--keep beg
+        (ess-goto-beginning-of-function-or-para)
+        (shelter-r--eval-region beg (point)))
+    (call-interactively #'ess-eval-function-or-paragraph)))
 
 (cl-symbol-macrolet
     ((opdel shelter-r-opening-delim)
@@ -173,15 +221,17 @@
   (defcamp shelter-r-eval
     "Evaluate R semantic blocks into the corresponding buffer."
     if reg   cmd 'ess-eval-region
-    at cldel do  (shelter-r--eval-sexp)
+    bk cldel do  (shelter-r--eval-sexp)
     at outln do  (shelter-r--eval-outline))
 
   (defcamp shelter-r-eval-defun
-    "Evaluate functions or paragraphs."
-    at cldel cmd 'ess-eval-function-or-paragraph)
+    "Evaluate functions or paragraphs.
+
+See `shelter-r--eval-defun'"
+    bk cldel cmd 'shelter-r--eval-defun)
 
   (defcamp shelter-r-execute
-    "Execute R commands"
+    "Execute R commands in a `tent'."
     bk cldel tent
     '(("s" ess-set-working-directory "setwd")
       ("g" (shelter-cmd 'shelter-r--getwd) "getwd")
@@ -190,7 +240,7 @@
       ("l" (shelter-cmd 'shelter-r--list-files) "list files")))
 
   (defcamp shelter-r-roxygen
-    "Roxygen related commands"
+    "Roxygen related commands."
     if reg do (call-interactively #'ess-eval-region)
     bk cldel tent
     '(("u" ess-roxy-update-entry "update")
@@ -244,7 +294,6 @@
    "x" 'shelter-r-execute
    "R" 'shelter-r-roxygen
    "w" 'shelter-r-wip))
-
 
 (provide 'shelter-R)
 ;;; shelter-R.el ends here
