@@ -55,11 +55,13 @@ ARG must be a list of four elements as returned by `camp'.
 Three action keywords are recognized:
 - CALL: funcall the next argument
 - DO  : just execute the next argument.
+- BURN: call next argument but destroy camp first.
 - TENT: call `tent' on the next argument.
 - CMD : call next argument interactively"
   (pcase (elt arg 2)
     ('call `(camp--fc ,(elt arg 3)))
     ('do    (elt arg 3))
+    ('burn `(camp--del (camp--fc ,(elt arg 3))))
     ('tent `(tent ,(elt arg 3)))
     ('cmd  `(call-interactively ,(elt arg 3)))
     (_ (error "Unrecognized camp keyword"))))
@@ -156,10 +158,13 @@ in `ignore-errors'."
 Equivalent to `save-excursion'."
   `(save-excursion ,@body))
 
+(defmacro camp--del (&rest body)
+  "Execute BODY after removing the preceding camp cookie."
+  `(progn (delete-char -1) ,@body))
+
 (defun camp--group (source n)
   "Divide SOURCE list in N groups and stack together the last
-elements.
-"
+elements."
   (if (zerop n) (error "Zero length"))
   (cl-labels ((rec (source acc)
                    (let ((rest (nthcdr n source)))
