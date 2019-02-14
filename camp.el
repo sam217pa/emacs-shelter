@@ -57,6 +57,24 @@ all camp keymap, use `camp-keymap' as the argument to :MAP."
                (kbd ,(car pair)) ,(cadr pair)))
           (camp--group simple 2)))))
 
+(defmacro camp-defkey (key map docstring &rest camp)
+  "Define a function named camp-MAP-KEY documented by DOCSTRING
+that expand the CAMP clauses.
+
+KEY will be bound to camp-MAP-KEY in the MAP keymap, and
+documented by DOCSTRING. For instance,
+
+  (camp-defkey \"s\" text \"documentation\" ...)
+
+defines a command named camp-text-s with ... as `camp' clauses.
+
+See also `defcamp'."
+  (declare (doc-string 3) (indent defun))
+  (let ((f (intern (format "camp-%s-%s" map key))))
+    `(progn
+       (defcamp ,f ,docstring ,@camp)
+       (define-key ,(camp--default-map map) (kbd ,key) #',f))))
+
 (aeolian-sharp-minor camp
   "Dress camp for current major mode.
 
