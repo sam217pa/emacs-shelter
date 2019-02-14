@@ -20,11 +20,13 @@
 
 ;;; Commentary:
 
-;;
+;; TODO: better documentation. [2019-02-13 19:25]
+;;   Function are not really explicit in their description.
 
 ;;; Code:
 
 (require 'camp-utils)
+(require 'thingatpt)
 
 ;;;; Customize
 
@@ -104,7 +106,7 @@ punctuation sign."
      (at-para  (and (bolp) (camp-at paragraph-start)))
      (at-p-beg (and (bolp) (camp-stay (forward-line -1)
                                       (and (bolp) (eolp)))))
-     (emptyl   (and (bolp) (eolp))))
+     (emptyln   (and (bolp) (eolp))))
 
   (defcamp camp-text
     "Camp commands for editing text."
@@ -117,21 +119,33 @@ punctuation sign."
 
   (defcamp camp-text-up
     "Go up"
-    if at-p-beg do (forward-line -1))
+    if at-p-beg do   (forward-line -1)
+    bk ","      burn (beginning-of-thing 'sentence)
+    bk ":"      burn (beginning-of-thing 'paragraph)
+    bk ";"      burn (beginning-of-thing 'page))
 
   (defcamp camp-text-down
     "Go down"
-    if emptyl do (forward-line 1))
+    if emptyln do   (forward-line 1)
+    bk ","     burn (end-of-thing 'sentence)
+    bk ":"     burn (end-of-thing 'paragraph)
+    bk ";"     burn (end-of-thing 'page))
 
   (defcamp camp-text-next
     "Commands for next semantic element when at camp."
-    at "" do (forward-page)
+    at "" do    (forward-page)
+    bk ","  burn  (forward-thing 'sentence 1)
+    bk ":"  burn  (forward-thing 'paragraph 1)
+    bk ";"  burn  (forward-thing 'page 1)
     if at-para do (camp-fwd-paragraph)
     if bk-stce do (camp-fwd-sentence))
 
   (defcamp camp-text-prev
     "Commands for previous semantic element when at camp."
-    at "" do (backward-page)
+    at "" do    (backward-page)
+    bk ","  burn  (forward-thing 'sentence -1)
+    bk ":"  burn  (forward-thing 'paragraph -1)
+    bk ";"  burn  (forward-thing 'page -1)
     if at-para do (camp-bwd-paragraph)
     if bk-stce do (camp-bwd-sentence))
 
