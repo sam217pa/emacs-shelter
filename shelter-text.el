@@ -101,6 +101,12 @@ punctuation sign."
 (defsubst camp-bwd-paragraph ()
   (backward-paragraph 1))
 
+(defsubst backward-thing (thing &optional n)
+  "Wrapper around `forward-thing' for moving backward.
+
+Duh."
+  (forward-thing thing (when n (- n))))
+
 (cl-symbol-macrolet
     ((bk-stce  (or (camp-bk sentence-end-base) (bolp)))
      (at-para  (and (bolp) (camp-at paragraph-start)))
@@ -143,9 +149,9 @@ punctuation sign."
   (defcamp camp-text-prev
     "Commands for previous semantic element when at camp."
     at "" do    (backward-page)
-    bk ","  burn  (forward-thing 'sentence -1)
-    bk ":"  burn  (forward-thing 'paragraph -1)
-    bk ";"  burn  (forward-thing 'page -1)
+    bk ","  burn  (backward-thing 'sentence 1)
+    bk ":"  burn  (backward-thing 'paragraph 1)
+    bk ";"  burn  (backward-thing 'page 1)
     if at-para do (camp-bwd-paragraph)
     if bk-stce do (camp-bwd-sentence))
 
