@@ -27,6 +27,7 @@
 ;;;; Require
 
 (require 'tent)
+(require 'pause)
 
 ;;;; Camper
 
@@ -57,13 +58,15 @@ Three action keywords are recognized:
 - DO  : just execute the next argument.
 - BURN: call next argument but destroy camp first.
 - TENT: call `tent' on the next argument.
+- PAUSE: call `pause' on the next argument.
 - CMD : call next argument interactively"
   (pcase (elt arg 2)
-    ('call `(camp--fc ,(elt arg 3)))
-    ('do    (elt arg 3))
-    ('burn `(camp--del (camp--fc ,(elt arg 3))))
-    ('tent `(tent ,(elt arg 3)))
-    ('cmd  `(call-interactively ,(elt arg 3)))
+    ('call  `(camp--fc ,(elt arg 3)))
+    ('do     (elt arg 3))
+    ('burn  `(camp--del (camp--fc ,(elt arg 3))))
+    ('tent  `(tent ,(elt arg 3)))
+    ('pause `(pause t ,@(elt arg 3)))
+    ('cmd   `(call-interactively ,(elt arg 3)))
     (_ (error "Unrecognized camp keyword"))))
 
 (defun camp--conds (arg)
