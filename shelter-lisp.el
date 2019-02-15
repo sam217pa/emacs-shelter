@@ -31,6 +31,11 @@
   "Returns t if point is after a closing paren."
   (or (camp-bk "\)") (camp-at "\(")))
 
+(defcamp camp-lisp-mark
+  "Mark sexp at point"
+  at "\(" do (mark-sexp  1)
+  bk "\)" do (mark-sexp -1))
+
 ;;; Emacs lisp
 
 (defcamp camp-emacs-lisp-next
@@ -84,7 +89,8 @@
   "p" 'camp-emacs-lisp-prev
   "b" 'camp-emacs-lisp-bwd
   "f" 'camp-emacs-lisp-fwd
-  "x" 'camp-emacs-lisp-exec))
+  "x" 'camp-emacs-lisp-exec
+  "m" 'camp-lisp-mark))
 
 (fort-define-keys
  :map emacs-lisp
