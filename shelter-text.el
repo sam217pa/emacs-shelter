@@ -108,7 +108,8 @@ Duh."
   (forward-thing thing (when n (- n))))
 
 (cl-symbol-macrolet
-    ((bk-stce  (or (camp-bk sentence-end-base) (bolp)))
+    ((bk-stce  (or (camp-bk sentence-end-base)
+                   (and (bolp) (camp-at "[[:word:]]+"))))
      (at-para  (and (bolp) (camp-at paragraph-start)))
      (at-p-beg (and (bolp) (camp-stay (forward-line -1)
                                       (and (bolp) (eolp)))))
