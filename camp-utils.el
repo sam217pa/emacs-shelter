@@ -55,11 +55,11 @@ ARG must be a list of four elements as returned by `camp'.
 
 Three action keywords are recognized:
 - CALL: funcall the next argument
-- DO  : just execute the next argument.
+- DO: just execute the next argument.
 - BURN: call next argument but destroy camp first.
 - TENT: call `tent' on the next argument.
 - PAUSE: call `pause' on the next argument.
-- CMD : call next argument interactively"
+- CMD: call next argument interactively"
   (pcase (elt arg 2)
     ('call  `(camp--fc ,(elt arg 3)))
     ('do     (elt arg 3))
@@ -81,15 +81,17 @@ executed only if:
 - BK: point is `looking-back' next element (see also `camp-bk')
 - IF: condition returns true. Condition can be shortened to REG
       if it checks for `region-active-p'."
-  (or
-   (pcase (elt arg 0)
-     ('at `((camp-at ,(elt arg 1))
-            ,(camp--kwd arg) t))
-     ('bk `((camp-bk ,(elt arg 1))
-            ,(camp--kwd arg) t))
-     ('if `(,(camp--seconds arg)
-            ,(camp--kwd arg) t)))
-   (error "Unrecognized camp keyword")))
+  (let ((cl0 (elt arg 0))
+        (cl1 (elt arg 1)))
+    (or
+     (pcase cl0
+       ('at `((camp-at ,cl1) ,(camp--kwd arg) t))
+       ('bk `((camp-bk ,cl1) ,(camp--kwd arg) t))
+       ('btwn `((and (camp-bk ,(car cl1))
+                     (camp-at ,(cadr cl1)))
+                ,(camp--kwd arg) t))
+       ('if `(,(camp--seconds arg) ,(camp--kwd arg) t)))
+     (error "Unrecognized camp keyword"))))
 
 ;;;###autoload
 (defmacro camp (&rest args)
