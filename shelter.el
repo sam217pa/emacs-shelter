@@ -51,6 +51,7 @@
 (require 'shelter-text)
 (require 'shelter-org)
 (require 'shelter-lisp)
+(require 'shelter-r)
 
 (defcustom shelter-remap-read-only t
   "Whether to remap read-only keybindings (C-x C-q) to `fort'.
