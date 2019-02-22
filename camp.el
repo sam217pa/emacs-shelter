@@ -48,14 +48,19 @@ The camp keymap :MAP will be created if needed. To bind keys to
 all camp keymap, use `camp-keymap' as the argument to :MAP."
   (let ((kmp (camp--default-map map)))
     `(progn
-       (unless (boundp ',kmp)
-         (defvar ,kmp (make-sparse-keymap)
-           ,(format "Camp sharp keymap for %s mode" map)))
+       (camp--defmap ,kmp ,map)
        ,@(mapcar
           (lambda (pair)
             `(define-key ,kmp
                (kbd ,(car pair)) ,(cadr pair)))
           (camp--group simple 2)))))
+
+(defmacro camp--defmap (kmp &optional map)
+  "Define KMP keymap for mode MAP."
+  `(unless (boundp ',kmp)
+     (defvar ,kmp (make-sparse-keymap)
+       ,(when map
+          (format "Camp sharp keymap for %s mode" map)))))
 
 (defmacro camp-defkey (key map docstring &rest camp)
   "Define a function named camp-MAP-KEY documented by DOCSTRING
@@ -72,6 +77,7 @@ See also `defcamp'."
   (declare (doc-string 3) (indent defun))
   (let ((f (intern (format "camp-%s-%s" map key))))
     `(progn
+       (camp--defmap ,(camp--default-map map))
        (defcamp ,f ,docstring ,@camp)
        (define-key ,(camp--default-map map) (kbd ,key) #',f))))
 
