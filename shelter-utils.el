@@ -28,7 +28,7 @@
   "The classic with gensyms macro that evaluate BODY with
 gensymed SYMBOLS."
   (declare (indent 1))
-  (assert (cl-every #'symbolp symbols))
+  (cl-assert (cl-every #'symbolp symbols))
   `(let (,@(mapcar (lambda (s) `(,s (gensym))) symbols))
      ,@body))
 
