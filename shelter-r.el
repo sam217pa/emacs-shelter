@@ -34,6 +34,7 @@
 ;; TODO: [2019-02-11 21:56] add autoload cookies, but where?
 
 (require 'cl-lib)
+(require 'thingatpt)
 
 (require 'shelter-utils)
 
@@ -103,6 +104,16 @@
   (shelter-r--with-proc pr
     (ess-send-string pr str)))
 
+(defun shelter-r--get-function-name ()
+  (camp-stay
+   (backward-list)
+   (shelter-r--keep end
+     (backward-sexp)
+     (buffer-substring-no-properties (point) end))))
+
+(defun shelter-r--help ()
+  (ess-help (shelter-r--get-function-name)))
+
 (defun shelter-r--eval-sexp ()
   "Eval sexp before point."
   (shelter-r--keep end
@@ -134,6 +145,12 @@
      ,@(mapcar
         (lambda (f) `(funcall ,f))
         args)))
+
+(defmacro shelter-r--iess-buf (&rest body)
+  "Eval BODY with current buffer bound to current ess process
+buffer."
+  `(with-current-buffer (ess-get-process-buffer)
+    ,@body))
 
 (defmacro shelter-r--execute (cmd &optional msg)
   `(ess-execute ,cmd 'buffer nil ,msg))
@@ -197,6 +214,16 @@ cookies surrounding point."
   (interactive)
   (shelter-r--wip-apply #'comment-region))
 
+(defun shelter-r-wip-narrow ()
+  "Narrow buffer to current work-in-progress."
+  (interactive)
+  (if (buffer-narrowed-p)
+      (widen)
+    (shelter-r--wip-apply #'narrow-to-region)))
+
+(defun shelter-r--act (key &optional arg)
+  (funcall (key-binding (kbd key)) arg))
+
 ;;;; Evaluation
 
 (defun shelter-r--eval-defun ()
@@ -213,6 +240,14 @@ of paragraph (often the beginning of pipeline) to point."
         (shelter-r--eval-region beg (point)))
     (call-interactively #'ess-eval-function-or-paragraph)))
 
+(defsubst shelter--botapt (thing)
+  (let ((botapt (bounds-of-thing-at-point thing)))
+    (list (car botapt) (cdr botapt))))
+
+(defsubst shelter-r--enparen (&optional arg)
+  (let ((parens-require-spaces nil))
+    (camp-or (insert-parentheses arg))))
+
 (cl-symbol-macrolet
     ((opdel shelter-r-opening-delim)
      (cldel shelter-r-closing-delim)
@@ -221,6 +256,7 @@ of paragraph (often the beginning of pipeline) to point."
   (defcamp shelter-r-eval
     "Evaluate R semantic blocks into the corresponding buffer."
     if reg   cmd 'ess-eval-region
+    bk "\}"  do  (shelter-r--eval-defun)
     bk cldel do  (shelter-r--eval-sexp)
     at outln do  (shelter-r--eval-outline))
 
@@ -247,8 +283,9 @@ See `shelter-r--eval-defun'"
       ("r" shelter-r-roxify "roxify")
       ("h" ess-roxy-hide-all "hide")))
 
-  (defcamp shelter-r-up
+  (camp-defkey "s" ess
     "Up movement in R source code."
+    bk ","   burn (save-buffer)
     at outln cmd 'outline-previous-visible-heading
     at "^#'" do  (re-search-backward "^#'" nil t)
     bk cldel do  (shelter-r--bwd-list))
@@ -261,19 +298,76 @@ See `shelter-r--eval-defun'"
 
   (defcamp shelter-r-right
     "Right movements in R source code."
+    if reg   cmd 'ess-eval-region
     bk cldel do (up-list)
     at outln do (outline-show-subtree))
 
-  (defcamp shelter-r-left
+  (camp-defkey "c" ess
     "Left movements in R source code."
+    bk ","   burn (shelter-r--iess-buf (comint-interrupt-subjob))
     bk cldel cmd 'backward-sexp
     at outln cmd 'outline-hide-subtree)
 
+  (camp-defkey "k" ess
+    "Kill actions in R source code."
+    at "#" do (shelter-r--act "C-k")
+    bk cldel do (apply #'kill-region (shelter--botapt 'paragraph)))
+
+  (camp-defkey "z" ess
+    "Switch to buffer"
+    bk "," burn (ess-switch-to-ESS t))
+
   (defcamp shelter-r-wip
     "Work in progress cookies related editing."
-    bk cldel tent '(("k" shelter-r-wip-delete "kill")
-                    ("e" shelter-r-wip-eval   "eval")
-                    ("c" shelter-r-wip-comment "comment")))) ;cl-symbol-macrolet
+    bk cldel pause ((pause-prompt "WIP:\n[k]ill / [e]val / [c]omment / [n]arrow")
+                    "k" (shelter-r-wip-delete)
+                    "e" (shelter-r-wip-eval)
+                    "c" (shelter-r-wip-comment)
+                    "n" (shelter-r-wip-narrow)))
+
+  (camp-defkey "n" ess
+    "Actions bound to the n key in `camp-ess-map'."
+    at outln cmd 'outline-narrow-to-subtree
+    bk "\{" do (if (buffer-narrowed-p)
+                   (widen)
+                 (let ((begend (bounds-of-thing-at-point 'sexp)))
+                   (narrow-to-region (1+ (car begend))
+                                     (1- (cdr begend))))))
+
+  (camp-defkey "m" ess
+  "Actions bound to the m key in `camp-ess-map'."
+  if (or (camp-at "\{") (camp-bk "\}"))
+  do (progn (ess-mark-function-or-para)
+            (exchange-point-and-mark)))
+
+  (camp-defkey "i" ess
+    "Actions bound to the i key in `camp-ess-map'.
+
+Related to indentation mostly."
+    if reg cmd 'indent-region
+    bk cldel do (camp-stay
+                 (ess-mark-function-or-para)
+                 (call-interactively 'indent-region)))
+
+  (camp-defkey "d" ess
+    "Actions bound to the d key in `camp-ess-map'."
+    bk "," burn (ess-rdired))
+
+  (camp-defkey "l" ess
+    "Actions bound to the l key in `camp-ess-map'."
+    bk "\)\\|\]" cmd 'ess-eval-line)
+
+  (camp-defkey "(" ess
+    "Actions bound to the paren key in `camp-ess-map'."
+    btwn ("[[:alpha:]]" "[[:alpha:]]")
+    do (shelter-r--enparen 1))
+
+  (camp-defkey "h" ess
+    "Actions bound to the h key in `camp-ess-map'."
+    bk "," burn (call-interactively #'ess-display-help-on-object)
+    bk "\)" do (shelter-r--help))) ;cl-symbol-macrolet
+
+
 
 (fort-define-keys
  :map ess
@@ -285,15 +379,13 @@ See `shelter-r--eval-defun'"
 (camp-define-keys
  :map ess
  :simple
-  ("s" 'shelter-r-up
-   "t" 'shelter-r-down
-   "r" 'lesspy-right
-   "c" 'lesspy-left
+  ("t" 'shelter-r-down
+   "r" 'shelter-r-right
    "e" 'shelter-r-eval
    "p" 'shelter-r-eval-defun
    "x" 'shelter-r-execute
    "R" 'shelter-r-roxygen
    "w" 'shelter-r-wip))
 
-(provide 'shelter-R)
+(provide 'shelter-r)
 ;;; shelter-R.el ends here
