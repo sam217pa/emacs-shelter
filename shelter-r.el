@@ -49,9 +49,9 @@
   (declare (indent 0))
   `(progn ,@(mapcar (lambda (x) `(declare-function ,x "ess-site")) funs)))
 
-(shelter-r--declare-functions
-  ess-send-string ess-eval-region
-  ess-roxy-toggle-roxy-region ess-execute
+(shelter-r--declare-functions ess-get-process-buffer
+  ess-switch-to-ESS ess-mark-function-or-para ess-send-string
+  ess-eval-region ess-roxy-toggle-roxy-region ess-execute
   ess-goto-beginning-of-function-or-para)
 
 (defvar ess-current-process-name nil)
@@ -222,6 +222,7 @@ cookies surrounding point."
     (shelter-r--wip-apply #'narrow-to-region)))
 
 (defun shelter-r--act (key &optional arg)
+  "Call the function bound to KEY with ARG as arguments."
   (funcall (key-binding (kbd key)) arg))
 
 ;;;; Evaluation
