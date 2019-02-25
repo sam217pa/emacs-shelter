@@ -93,9 +93,11 @@ overlay."
 
 (defsubst tent--unpropertize (str)
   "Return STR with no text properties."
-  (substring-no-properties str))
+  (let ((s str))
+    (set-text-properties 0 (1- (length s)) nil s)
+    s))
 
-(defun tent--propertize (str &rest arg)
+(defun tent--propertize (str arg)
   "Return STR with face associated to ARG."
   (propertize (tent--unpropertize str) 'face arg))
 
@@ -110,12 +112,9 @@ overlay."
        (str (concat v (make-string (- max-pad (length v)) ?\s))))
     (tent--propertize str 'highlight)))
 
-(defmacro tent--propertize-bg (str)
+(defun tent--propertize-bg (str)
   "Rectify overlay background to default background color"
-  `(propertize
-    ,str
-    'font-lock-face `(:background ,(face-background 'default)
-                                  :foreground ,(face-foreground 'default))))
+  str)
 
 (defun tent--propertize-key-value (key-value max-pad)
   "Returns a correctly formatted and propertized key-functions.
