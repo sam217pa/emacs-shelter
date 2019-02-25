@@ -26,6 +26,11 @@
 
 (require 'cl-lib)
 
+(defgroup pause nil
+  "Simple transient map at point."
+  :prefix "pause-"
+  :group 'pause)
+
 (defun pause--group (source n)
   "Divide SOURCE list in N groups and stack together the last
 elements."
@@ -45,10 +50,10 @@ Highlight text between square brackets with `highlight',
 between round brackets with `font-lock-builtin-face',
 between curly brackets with `font-lock-constant-face'."
   (declare (doc-string 1))
-  (let ((str prompt)
-        (regexp-colors '(("\\[[-_A-Za-z0-9=]+\\]" . 'link)
-                         ("([-_A-Za-z0-9=]+)"     . 'highlight)
-                         ("{[-_A-Za-z0-9=]+}"     . 'font-lock-constant-face))))
+  (let ((str (propertize prompt 'face 'default))
+        (regexp-colors '(("\\[[-_A-Za-z0-9=]+\\]" . font-lock-function-name-face)
+                         ("([-_A-Za-z0-9=]+)"     . font-lock-keyword-face)
+                         ("{[-_A-Za-z0-9=]+}"     . font-lock-constant-face))))
     (cl-loop
      for re-color in regexp-colors
      do (let ((start 0))
@@ -61,6 +66,12 @@ between curly brackets with `font-lock-constant-face'."
                str)))))
     str))
 
+(defmacro pause--remov (ov)
+  "Delete overlay OV and reset the containing variable."
+  `(when (overlayp ,ov)
+     (delete-overlay ,ov)
+     (setq ,ov nil)))
+
 (defmacro pause--ov-puts (ov &rest args)
   "Put ARGS properties to overlay OV.
 
@@ -69,6 +80,32 @@ ARGS should be grouped by two. Wraps `overlay-put'."
   `(progn
      ,@(mapcar (lambda (props) `(overlay-put ,ov ,@props))
                (pause--group args 2))))
+
+(defmacro pause--ov-display (str ct ov)
+  "Display STR in an overlay OV at point, temporarily disabling
+cursor type CT."
+  `(let ((beg (point)) (end (1+ (line-end-position))))
+    (when cursor-type
+      (setq ,ct cursor-type)
+      (setq cursor-type nil))
+    (setq ,ov (make-overlay beg end))
+    (pause--ov-puts ,ov
+        'display ,str
+        'before-string "\n"
+        'after-string "\n"
+        'priority 9999)
+    nil))
+
+(defun pause--pad (str)
+  "Pad STR with empty char on the left so that it appears below
+point."
+  (let ((pad (if (bolp)
+                 ""
+               (make-string (- (point) (point-at-bol)) ?\s))))
+    (mapconcat
+     #'identity
+     (split-string (concat pad str) "\n")
+     (concat "\n" pad))))
 
 (defmacro pause (persist-p prompt &rest args)
   "Put game in pause with a transient map.
@@ -99,47 +136,28 @@ non-interactive functions are directly called."
   (let ((ov         (gensym "pause-ov-"))
         (ct         (gensym "pause-ct-"))
         (kmp        (gensym "pause-kmp-"))
-        (ov-cleanup (gensym "pause-ov-clnp-"))
-        (ov-display (gensym "pause-ov-disp-"))
-        (ov-pad     (gensym "pause-ov-pad-")))
+        (ov-cleanup (gensym "pause-ov-clnp-")))
     `(let ((,kmp (make-sparse-keymap)) ,ov ,ct)
        (cl-flet
            ;; remove overlay and set cursor type back to normal
            ((,ov-cleanup ()
-               (when (overlayp ,ov)
-                 (delete-overlay ,ov)
-                 (setq ,ov nil))
-               (unless cursor-type (setq cursor-type ,ct)))
-            ;; display str in overlay at point
-            ;; remove the cursor for now
-            (,ov-display (str)
-              (let ((beg (point)) (end (1+ (line-end-position))))
-                (when cursor-type
-                  (setq ,ct cursor-type)
-                  (setq cursor-type nil))
-                (setq ,ov (make-overlay beg end))
-                (pause--ov-puts ,ov
-                    'display str
-                    'before-string "\n"
-                    'after-string "\n"
-                    'priority 9999)
-                nil))
-            ;; pad string with empty char on the left so that it appears
-            ;; below point
-            (,ov-pad (str)
-               (let ((pad (if (bolp) "" (make-string (- (point)
-                                                        (point-at-bol))
-                                                     ?\s))))
-                 (mapconcat #'identity
-                            (split-string (concat pad str) "\n")
-                            (concat "\n" pad)))))
+               (pause--remov ,ov)
+               (pause--remov pause--ovback)
+               (unless cursor-type (setq cursor-type ,ct))))
          ,@(cl-loop
-            for kf in (sam--group args 2)
+            for kf in (pause--group args 2)
             collect `(define-key ,kmp (kbd ,(car kf))
                        (lambda () (interactive) ,(cadr kf))))
-         (,ov-display (,ov-pad ,prompt))
+         (pause--ov-display (pause--pad ,prompt) ,ct ,ov)
          (set-transient-map ,kmp ,persist-p #',ov-cleanup)
          (message "...")))))
+
+;;;###autoload
+(defun pause-this-key ()
+  "Return the key sequence of command at point."
+  (key-description (this-single-command-raw-keys)))
+
+
 
 (provide 'pause)
 ;;; pause.el ends here
