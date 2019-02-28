@@ -261,10 +261,11 @@ of paragraph (often the beginning of pipeline) to point."
     bk cldel do  (shelter-r--eval-sexp)
     at outln do  (shelter-r--eval-outline))
 
-  (defcamp shelter-r-eval-defun
+  (camp-defkey "p" ess
     "Evaluate functions or paragraphs.
 
 See `shelter-r--eval-defun'"
+    bk ","   burn (call-interactively #'outline-previous-visible-heading)
     bk cldel cmd 'shelter-r--eval-defun)
 
   (defcamp shelter-r-execute
@@ -366,7 +367,11 @@ Related to indentation mostly."
   (camp-defkey "h" ess
     "Actions bound to the h key in `camp-ess-map'."
     bk "," burn (call-interactively #'ess-display-help-on-object)
-    bk "\)" do (shelter-r--help))) ;cl-symbol-macrolet
+    bk "\)" do (shelter-r--help))
+
+  (camp-defkey "*" ess
+    "Actions bound to the * key in `camp-ess-map'."
+    bk "," burn (call-interactively #'outline-insert-heading))) ;cl-symbol-macrolet
 
 
 
@@ -383,7 +388,6 @@ Related to indentation mostly."
   ("t" 'shelter-r-down
    "r" 'shelter-r-right
    "e" 'shelter-r-eval
-   "p" 'shelter-r-eval-defun
    "x" 'shelter-r-execute
    "R" 'shelter-r-roxygen
    "w" 'shelter-r-wip))
