@@ -242,10 +242,12 @@ of paragraph (often the beginning of pipeline) to point."
     (call-interactively #'ess-eval-function-or-paragraph)))
 
 (defsubst shelter--botapt (thing)
+  "Bound of THING at point."
   (let ((botapt (bounds-of-thing-at-point thing)))
     (list (car botapt) (cdr botapt))))
 
 (defsubst shelter-r--enparen (&optional arg)
+  "Insert parenthesis around stuffs."
   (let ((parens-require-spaces nil))
     (camp-or (insert-parentheses arg))))
 
@@ -254,8 +256,8 @@ of paragraph (often the beginning of pipeline) to point."
      (cldel shelter-r-closing-delim)
      (outln outline-regexp))
 
-  (defcamp shelter-r-eval
-    "Evaluate R semantic blocks into the corresponding buffer."
+  (camp-defkey "e" ess
+    "Evaluate R semantic blocks in the corresponding buffer."
     if reg   cmd 'ess-eval-region
     bk "\}"  do  (shelter-r--eval-defun)
     bk cldel do  (shelter-r--eval-sexp)
@@ -268,7 +270,7 @@ See `shelter-r--eval-defun'"
     bk ","   burn (call-interactively #'outline-previous-visible-heading)
     bk cldel cmd 'shelter-r--eval-defun)
 
-  (defcamp shelter-r-execute
+  (camp-defkey "x" ess
     "Execute R commands in a `tent'."
     bk cldel tent
     '(("s" ess-set-working-directory "setwd")
@@ -277,8 +279,8 @@ See `shelter-r--eval-defun'"
       ("W" (shelter-cmd 'shelter-r--full-width) "full width")
       ("l" (shelter-cmd 'shelter-r--list-files) "list files")))
 
-  (defcamp shelter-r-roxygen
-    "Roxygen related commands."
+  (camp-defkey "R" ess
+    "Commands bound to R."
     if reg do (call-interactively #'ess-eval-region)
     bk cldel tent
     '(("u" ess-roxy-update-entry "update")
@@ -292,13 +294,13 @@ See `shelter-r--eval-defun'"
     at "^#'" do  (re-search-backward "^#'" nil t)
     bk cldel do  (shelter-r--bwd-list))
 
-  (defcamp shelter-r-down
+  (camp-defkey "t" ess
     "Down movements in R source code."
     at outln cmd 'outline-next-visible-heading
     at "^#'" do  (progn (re-search-forward "^#'" nil t 2) (beginning-of-line))
     bk cldel do  (ignore-errors (forward-list)))
 
-  (defcamp shelter-r-right
+  (camp-defkey "r" ess
     "Right movements in R source code."
     if reg   cmd 'ess-eval-region
     bk cldel do (up-list)
@@ -319,7 +321,7 @@ See `shelter-r--eval-defun'"
     "Switch to buffer"
     bk "," burn (ess-switch-to-ESS t))
 
-  (defcamp shelter-r-wip
+  (camp-defkey "w" ess
     "Work in progress cookies related editing."
     bk cldel pause ((pause-prompt "WIP:\n[k]ill / [e]val / [c]omment / [n]arrow")
                     "k" (shelter-r-wip-delete)
@@ -381,16 +383,6 @@ Related to indentation mostly."
   ("d" 'ess-rdired
    "s" 'ess-switch-process
    "SPC s" 'save-buffer))
-
-(camp-define-keys
- :map ess
- :simple
-  ("t" 'shelter-r-down
-   "r" 'shelter-r-right
-   "e" 'shelter-r-eval
-   "x" 'shelter-r-execute
-   "R" 'shelter-r-roxygen
-   "w" 'shelter-r-wip))
 
 (provide 'shelter-r)
 ;;; shelter-R.el ends here
