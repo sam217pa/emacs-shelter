@@ -1,0 +1,14 @@
+# -*- mode: org -*-
+# Time-stamp: <2019-02-28 11:07:38 samuelbarreto>
+* TODO fix providing
+As of now I don’t think that the current
+export method is optimal. One should be
+able to use shelter without having to use
+shelter-r, since shelter-r has many more
+dependencies that are not that necessary
+to the rest of shelter per se.
+* TODO fix loading
+I think that maybe with-eval-after-load
+should be added somewhere, rather than
+silencing the byte-compiler using ad-hoc
+methods.

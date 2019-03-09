@@ -20,7 +20,8 @@
 
 ;;; Commentary:
 
-;;
+;; TODO: pause should also appear at end of buffer
+;;       but don't know how. yet. [2019-02-25 23:07]
 
 ;;; Code:
 
