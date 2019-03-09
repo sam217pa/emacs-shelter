@@ -158,7 +158,5 @@ non-interactive functions are directly called."
   "Return the key sequence of command at point."
   (key-description (this-single-command-raw-keys)))
 
-
-
 (provide 'pause)
 ;;; pause.el ends here
