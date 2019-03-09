@@ -127,7 +127,7 @@ the camp-keymap defined by `:map`. Here <kbd>e</kbd> is bound to
 `camp-emacs-lisp-eval` in the `camp-emacs-lisp-map`: Here is what it
 does when I press <kbd>e</kbd>.
 
-![camp1](https://sam217pa.github.io/emacs-shelter/camp1.mp4)
+[camp1](https://sam217pa.github.io/emacs-shelter/camp1.mp4)
 
 ## Tent
 
@@ -169,7 +169,7 @@ displayed at point, much like an hydra displayed at point.
 
 It is showcased in the following video:
 
-![](https://sam217pa.github.io/emacs-shelter/camp2.mp4)
+[camp2](https://sam217pa.github.io/emacs-shelter/camp2.mp4)
 
 Pause provides one macro, `pause`, with first argument specifying if
 the transient map should stay active as long as keybindings in it are
