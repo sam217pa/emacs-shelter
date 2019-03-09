@@ -35,9 +35,8 @@
 
 (require 'cl-lib)
 (require 'thingatpt)
-
+(require 'eap)
 (require 'shelter-utils)
-
 (require 'camp)
 (require 'fort)
 (require 'tent)
@@ -116,9 +115,10 @@
 
 (defun shelter-r--eval-sexp ()
   "Eval sexp before point."
-  (shelter-r--keep end
-    (backward-list) (backward-sexp)
-    (ess-eval-region (point) end nil nil)))
+  (eap
+   (shelter-r--keep end
+     (backward-list) (backward-sexp)
+     (shelter-r--eval-region (point) end))))
 
 (defsubst shelter-r--eval-region (beg end)
   "Wrapper around `ess-eval-region'"
@@ -161,10 +161,39 @@ buffer."
         (lambda (bdg)
           `(defun ,(elt bdg 0) ()
              ,(elt bdg 3)
+             (interactive)
              (shelter-r--execute
               ,(elt bdg 1)
               ,(elt bdg 2))))
         bindings)))
+
+(defun shelter-r--render ()
+  "Render the current file using rmarkdown::render"
+  (interactive)
+
+  (let* ((fn   (buffer-file-name))
+         (rprt (concat (file-name-directory fn) "/reports/"))
+         (figs (concat (file-name-directory fn) "/figures/"))
+         (pref (file-name-base fn))
+         (cmd  (format "rmarkdown::render(\"%s\", output_file=\"reports/%s.pdf\")"
+                       fn pref)))
+    (unless (file-exists-p rprt) (mkdir rprt))
+    (unless (file-exists-p figs) (mkdir figs))
+    (shelter-r--execute cmd "render")))
+
+(defvar-local shelter-r--fig-count 0
+  "Counter of fig in current R buffer.")
+
+(defun shelter-r--fig (caption)
+  (interactive "sFig Caption: ")
+  (cl-incf shelter-r--fig-count)
+  (let ((idx shelter-r--fig-count))
+    (if (string-empty-p caption)
+        (insert
+         (format "#+ chunk%s, cache=TRUE" idx))
+      (let ((cap (format "\\\\label{fig:fig%s}%s" idx caption)))
+        (insert
+         (format "#+ fig%s, fig.cap=\"%s\"" idx cap))))))
 
 (shelter-r--exe-defuns
  (shelter-r--full-width
@@ -236,10 +265,11 @@ of paragraph (often the beginning of pipeline) to point."
   (interactive)
   (if (and (camp-at " %>%$\\| \\+$")
            (camp-bk shelter-r-closing-delim))
-      (shelter-r--keep beg
-        (ess-goto-beginning-of-function-or-para)
-        (shelter-r--eval-region beg (point)))
-    (call-interactively #'ess-eval-function-or-paragraph)))
+      (eap
+       (shelter-r--keep end
+         (ess-goto-beginning-of-function-or-para)
+         (shelter-r--eval-region (point) end)))
+    (eap-wrap #'ess-eval-function-or-paragraph)))
 
 (defsubst shelter--botapt (thing)
   "Bound of THING at point."
@@ -258,7 +288,7 @@ of paragraph (often the beginning of pipeline) to point."
 
   (camp-defkey "e" ess
     "Evaluate R semantic blocks in the corresponding buffer."
-    if reg   cmd 'ess-eval-region
+    if reg   cmd 'eap-eval-region
     bk "\}"  do  (shelter-r--eval-defun)
     bk cldel do  (shelter-r--eval-sexp)
     at outln do  (shelter-r--eval-outline))
@@ -272,12 +302,15 @@ See `shelter-r--eval-defun'"
 
   (camp-defkey "x" ess
     "Execute R commands in a `tent'."
+    at "#'"  pause
+    ((pause-prompt "RENDER: [r]ender")
+     "r" (shelter-r--render))
     bk cldel tent
     '(("s" ess-set-working-directory "setwd")
-      ("g" (shelter-cmd 'shelter-r--getwd) "getwd")
+      ("g" shelter-r--getwd "getwd")
       ("w" ess-execute-screen-options "set width")
-      ("W" (shelter-cmd 'shelter-r--full-width) "full width")
-      ("l" (shelter-cmd 'shelter-r--list-files) "list files")))
+      ("W" shelter-r--full-width "full width")
+      ("l" shelter-r--list-files "list files")))
 
   (camp-defkey "R" ess
     "Commands bound to R."
@@ -302,7 +335,7 @@ See `shelter-r--eval-defun'"
 
   (camp-defkey "r" ess
     "Right movements in R source code."
-    if reg   cmd 'ess-eval-region
+    if reg   cmd 'eap-eval-region
     bk cldel do (up-list)
     at outln do (outline-show-subtree))
 
@@ -339,9 +372,10 @@ See `shelter-r--eval-defun'"
                                      (1- (cdr begend))))))
 
   (camp-defkey "m" ess
-  "Actions bound to the m key in `camp-ess-map'."
-  if (or (camp-at "\{") (camp-bk "\}"))
-  do (progn (ess-mark-function-or-para)
+    "Actions bound to the m key in `camp-ess-map'."
+    at outln cmd 'outline-mark-subtree
+    if (or (camp-at "\{") (camp-bk "\}"))
+    do (progn (ess-mark-function-or-para)
             (exchange-point-and-mark)))
 
   (camp-defkey "i" ess
@@ -359,12 +393,24 @@ Related to indentation mostly."
 
   (camp-defkey "l" ess
     "Actions bound to the l key in `camp-ess-map'."
-    bk "\)\\|\]" cmd 'ess-eval-line)
+    bk "\)\\|\]" do (eap-wrap #'ess-eval-line))
 
   (camp-defkey "(" ess
     "Actions bound to the paren key in `camp-ess-map'."
     btwn ("[[:alpha:]]" "[[:alpha:]]")
     do (shelter-r--enparen 1))
+
+  (camp-defkey "'" ess
+    "Default insertions of quotes for roxygen comments."
+    bk "," burn (shelter-r--act "M-x")
+    if (looking-back "## " (point-at-bol))
+    do (progn (delete-char -2) (insert "' ")))
+
+  (camp-defkey "+" ess
+    "Default insertions of fig for spin scripts."
+    if (looking-back "^## " (point-at-bol))
+    do (progn (delete-char -3)
+              (call-interactively #'shelter-r--fig)))
 
   (camp-defkey "h" ess
     "Actions bound to the h key in `camp-ess-map'."
@@ -375,7 +421,7 @@ Related to indentation mostly."
     "Actions bound to the * key in `camp-ess-map'."
     bk "," burn (call-interactively #'outline-insert-heading))) ;cl-symbol-macrolet
 
-
+(define-key camp-ess-map (kbd "C-<return>") #'eap-control-enter)
 
 (fort-define-keys
  :map ess
