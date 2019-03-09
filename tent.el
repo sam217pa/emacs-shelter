@@ -39,7 +39,7 @@
 ;;
 ;;; Code:
 
-(require 'cl-lib)
+(eval-when-compile (require 'cl-lib))
 (require 'mule-util)                    ; for truncate-string-to-width
 
 (defcustom tent-max-lines 5
